@@ -7,6 +7,11 @@ package org.sphx.api;
 /** Exception thrown on attempts to pass invalid arguments to Sphinx API methods. */
 public class SphinxException extends Exception
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	/** Trivial constructor. */
 	public SphinxException()
 	{

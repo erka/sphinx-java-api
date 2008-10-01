@@ -941,10 +941,10 @@ public class SphinxClient
 		{
 			req.writeInt(0);
 			int iFlags = 1; /* remove_spaces */
-			if ( ((Integer)opts.get("exact_phrase"))!=0 )	iFlags |= 2;
-			if ( ((Integer)opts.get("single_passage"))!=0 )	iFlags |= 4;
-			if ( ((Integer)opts.get("use_boundaries"))!=0 )	iFlags |= 8;
-			if ( ((Integer)opts.get("weight_order"))!=0 )	iFlags |= 16;
+			if ( ((Integer)opts.get("exact_phrase")).intValue()!=0 )	iFlags |= 2;
+			if ( ((Integer)opts.get("single_passage")).intValue()!=0 )	iFlags |= 4;
+			if ( ((Integer)opts.get("use_boundaries")).intValue()!=0 )	iFlags |= 8;
+			if ( ((Integer)opts.get("weight_order")).intValue()!=0 )	iFlags |= 16;
 			req.writeInt ( iFlags );
 			writeNetUTF8 ( req, index );
 			writeNetUTF8 ( req, words );
@@ -1104,8 +1104,8 @@ public class SphinxClient
 				res[i].put ( "normalized", readNetUTF8 ( in ) );
 				if ( hits )
 				{
-					res[i].put ( "docs", readDword ( in ) );
-					res[i].put ( "hits", readDword ( in ) );
+					res[i].put ( "docs", Long.valueOf(readDword ( in )) );
+					res[i].put ( "hits", Long.valueOf(readDword ( in )) );
 				}
 			}
 			return res;
