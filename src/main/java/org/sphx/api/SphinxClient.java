@@ -17,10 +17,12 @@ package org.sphx.api;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.ConnectException;
@@ -241,20 +243,25 @@ public class SphinxClient {
 		return v;
 	}
 
-	/** Internal method. Connect to searchd and exchange versions. 
+	/** Exchange versions with sphinx. 
 	 * @throws SphinxException */
-	private void _Connect(Socket sock) throws SphinxException, IOException {
-			DataInputStream sIn = new DataInputStream ( sock.getInputStream() );
-			int version = sIn.readInt();
-			if ( version<1 )
-			{
-				throw new SphinxException("expected searchd protocol version 1+, got version " + version);
-			}
-
-			DataOutputStream sOut = new DataOutputStream ( sock.getOutputStream() );
-			sOut.writeInt ( VER_MAJOR_PROTO );
+	private void hello(DataInputStream sIn, DataOutputStream sOut) throws SphinxException, IOException {
+		int version = sIn.readInt();
+		if (version<1){
+			throw new SphinxException("expected searchd protocol version 1+, got version " + version);
+		}
+		sOut.writeInt(VER_MAJOR_PROTO);
 	}
 
+	void close(Closeable c) {
+		if (c != null) {
+			try {
+				c.close();
+			} catch (IOException e) {
+			}
+		}
+	}
+	
 	protected Socket getSocket() throws UnknownHostException, IOException {
 		Socket socket = new Socket ( _host, _port );
 		socket.setSoTimeout ( SPH_CLIENT_TIMEOUT_MILLISEC );
@@ -262,21 +269,14 @@ public class SphinxClient {
 	}
 
 	/** Internal method. Get and check response packet from searchd. */
-	private byte[] _GetResponse ( Socket sock )
-	{
-		/* connect */
-		DataInputStream sIn = null;
-		InputStream SockInput = null;
+	private byte[] _GetResponse ( DataInputStream sIn ){
 		
 		/*  response */
 		byte[] response = null;
 		short status = 0, ver = 0;
 		int len = 0;
 		
-		try
-		{
-			SockInput = sock.getInputStream();
-			sIn = new DataInputStream ( SockInput );
+		try{
 		
 			/* read status fields */
 			status = sIn.readShort();
@@ -337,19 +337,7 @@ public class SphinxClient {
 				_error = "received zero-sized searchd response (searchd crashed?): " + e.getMessage();
 			}
 			return null;
-
-		} finally
-		{
-			try
-			{
-				if ( sIn!=null ) sIn.close();
-				if ( sock!=null && !sock.isConnected() ) sock.close();
-			} catch ( IOException e )
-			{
-				/* silently ignore close failures; nothing could be done anyway */
-			}
 		}
-
 		return response;
 	}
 
@@ -358,20 +346,18 @@ public class SphinxClient {
 	{
 		/* connect */
 		Socket sock = null; 
+		InputStream sIn = null;
+		OutputStream sOut = null;
 	   	try {
 			sock = getSocket();
+			sIn = sock.getInputStream();
+			sOut =  sock.getOutputStream();
+			DataInputStream dIn = new DataInputStream ( sIn );
+			DataOutputStream dOut = new DataOutputStream (sOut);
+	   		hello(dIn, dOut);
+	   		request(command, version, req, dOut);
 
-	   		_Connect(sock);
-	   		/* send request */
-			DataOutputStream sockDS = new DataOutputStream ( sock.getOutputStream() );
-			sockDS.writeShort ( command );
-			sockDS.writeShort ( version );
-			byte[] reqBytes = req.toByteArray();
-			sockDS.writeInt ( reqBytes.length );
-			sockDS.write ( reqBytes );
-			
-			/* get response */
-			byte[] response = _GetResponse ( sock );
+	   		byte[] response = _GetResponse (dIn);
 			if (response == null){
 				return null;
 			}
@@ -384,14 +370,37 @@ public class SphinxClient {
 		} catch ( Exception e ) {
 			_error = "network error: " + e;
 		} finally {
-			if (sock != null) {
-				try {
-					sock.close();
-				} catch (IOException e) {
-				}
-			}
+			close(sIn);
+			close(sOut);
+			close(sock);
 		}
 		return null;
+	}
+
+	/**
+	 *  Send request to sphinx.
+	 * @param command
+	 * @param version
+	 * @param req
+	 * @param dOut
+	 * @throws IOException
+	 */
+	private void request(int command, int version, ByteArrayOutputStream req,
+			DataOutputStream dOut) throws IOException {
+		dOut.writeShort (command);
+		dOut.writeShort (version);
+		byte[] reqBytes = req.toByteArray();
+		dOut.writeInt(reqBytes.length);
+		dOut.write(reqBytes);
+	}
+
+	void close(Socket sock) {
+		if (sock != null) {
+			try {
+				sock.close();
+			} catch (IOException e) {
+			}
+		}
 	}
 
 	/** Set matches offset and limit to return to client, max matches to retrieve on server, and cutoff. */

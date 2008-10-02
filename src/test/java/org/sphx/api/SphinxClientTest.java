@@ -2,6 +2,7 @@ package org.sphx.api;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -477,13 +478,17 @@ public class SphinxClientTest extends TestCase {
 
 	}
 	
-	public void test_ConnectWithWrongVersion() throws IOException {
+	public void testHelloWithWrongVersion() throws IOException {
 				byte[] hello = new byte[]{0, 0, 0, 0};
 				final InputStream in = new ByteArrayInputStream(hello);
+				final ByteArrayOutputStream out = new ByteArrayOutputStream();
 				final Socket socket = new Socket () {
 				    public InputStream getInputStream() throws IOException {
 				    	return in;
 				    }
+				    public OutputStream getOutputStream() throws IOException {
+						return out;
+				    }	
 				};
 				sphinxClient = new SphinxClient(){
 					protected Socket getSocket() throws UnknownHostException, IOException {
@@ -499,23 +504,23 @@ public class SphinxClientTest extends TestCase {
 			}
 	
 	public void testConnectFailure() throws IOException {
-				final Socket socket = new Socket () {
-				    public InputStream getInputStream() throws IOException {
-				    	throw new ConnectException("error happened");
-				    }
-				};
-				sphinxClient = new SphinxClient(){
-					protected Socket getSocket() throws UnknownHostException, IOException {
-						return socket;
-					}
-				};
-				ByteArrayOutputStream data = new ByteArrayOutputStream();
-				byte[] bs = new byte[]{0,2,3,4,5,3,2,3,4,4,3,3};
-				data.write(bs);
-				sphinxClient._DoRequest( SphinxClient.SEARCHD_COMMAND_UPDATE, SphinxClient.VER_COMMAND_UPDATE, data);
-				assertEquals("connection to localhost:3312 failed: java.net.ConnectException: error happened", sphinxClient.GetLastError());
-				assertTrue(socket.isClosed());
+		final Socket socket = new Socket () {
+		    public InputStream getInputStream() throws IOException {
+		    	throw new ConnectException("error happened");
+		    }
+		};
+		sphinxClient = new SphinxClient(){
+			protected Socket getSocket() throws UnknownHostException, IOException {
+				return socket;
 			}
+		};
+		ByteArrayOutputStream data = new ByteArrayOutputStream();
+		byte[] bs = new byte[]{0,2,3,4,5,3,2,3,4,4,3,3};
+		data.write(bs);
+		sphinxClient._DoRequest( SphinxClient.SEARCHD_COMMAND_UPDATE, SphinxClient.VER_COMMAND_UPDATE, data);
+		assertEquals("connection to localhost:3312 failed: java.net.ConnectException: error happened", sphinxClient.GetLastError());
+		assertTrue(socket.isClosed());
+	}
 
 	public void test_DoRequest() throws IOException {
 		byte[] hello = new byte[]{0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 3, 2, 5, 12};
@@ -564,6 +569,20 @@ public class SphinxClientTest extends TestCase {
 				} catch (IOException e) {
 				}
 			}
+		}
+	}
+
+	public void testClose() {
+		Closeable c = new Closeable(){
+			public void close() throws IOException {
+				throw new IllegalArgumentException();
+			}
+			
+		};
+		try {
+			sphinxClient.close(c);
+			fail();
+		} catch (IllegalArgumentException e) {
 		}
 	}
 
