@@ -114,4 +114,104 @@ public class SphinxClientTest extends TestCase {
 		assertEquals(new Long(2), matchs[0].attrValues.get(1));
 
 	}
+	
+	public void testWrongHostAndPortParameters() {
+		
+		try {
+			sphinxClient.SetServer(null, 10);
+			fail();
+		}catch (Exception e) {
+			assertTrue(true);
+			assertEquals("host name must not be empty", e.getMessage());
+		}
+		
+		try {
+			sphinxClient.SetServer("", 10);
+			fail();
+		}catch (Exception e) {
+			assertTrue(true);
+			assertEquals("host name must not be empty", e.getMessage());
+			
+		}
+		
+		try {
+			sphinxClient.SetServer("localhost", 0);
+			fail();
+		}catch (Exception e) {
+			assertTrue(true);
+			assertEquals("port must be in 1..65535 range", e.getMessage());
+			
+		}
+		try {
+			sphinxClient.SetServer("localhost", 65536);
+			fail();
+		}catch (Exception e) {
+			assertTrue(true);
+			assertEquals("port must be in 1..65535 range", e.getMessage());
+		}
+		
+		try {
+			sphinxClient.SetServer("localhost", 5536);
+		}catch (Exception e) {
+			fail();
+		}
+		
+		/*
+		try {
+			new SphinxClient(null, 10);
+			fail();
+		}catch (Exception e) {
+			assertTrue(true);
+			assertEquals("host name must not be empty", e.getMessage());
+		}
+		
+		try {
+			new SphinxClient("", 10);
+			fail();
+		}catch (Exception e) {
+			assertTrue(true);
+			assertEquals("host name must not be empty", e.getMessage());
+		}
+		
+		try {
+			new SphinxClient("localhost", 0);
+			fail();
+		}catch (Exception e) {
+			assertTrue(true);
+			assertEquals("port must be in 1..65535 range", e.getMessage());
+		}
+		try {
+			new SphinxClient("localhost", 65536);
+			fail();
+		}catch (Exception e) {
+			assertTrue(true);
+			assertEquals("port must be in 1..65535 range", e.getMessage());
+		}
+		*/
+	}
+	
+	public void testConnectToWrongServer() throws SphinxException{
+		sphinxClient.SetServer("localhost", 26550);
+		sphinxClient.Query("wifi", "test1");
+		assertEquals("", sphinxClient.GetLastWarning());
+		assertEquals("connection to localhost:26550 failed: java.net.ConnectException: Connection refused", sphinxClient.GetLastError());
+	}
+	
+	
+	public void testBuildKeywords() throws SphinxException{
+		Map[] buildKeywords = sphinxClient.BuildKeywords("wifi*", "test1", true);
+		assertNotNull(buildKeywords);
+		assertEquals("wifi", buildKeywords[0].get("tokenized"));
+		assertEquals("wifi", buildKeywords[0].get("normalized"));
+		assertEquals(new Long(3), buildKeywords[0].get("docs"));
+		assertEquals(new Long(6), buildKeywords[0].get("hits"));
+		
+		buildKeywords = sphinxClient.BuildKeywords("wifi*", "test1", false);
+		assertNotNull(buildKeywords);
+		assertEquals("wifi", buildKeywords[0].get("tokenized"));
+		assertEquals("wifi", buildKeywords[0].get("normalized"));
+		assertNull(buildKeywords[0].get("docs"));
+		assertNull(buildKeywords[0].get("hits"));
+		
+	}
 }
