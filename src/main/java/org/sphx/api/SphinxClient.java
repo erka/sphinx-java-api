@@ -650,15 +650,10 @@ public class SphinxClient {
 
 		AddQuery ( query, index, comment );
 		SphinxResult[] results = RunQueries();
-
 		SphinxResult res = results[0];
 		_warning = res.warning;
 		_error = res.error;
-		if (res == null || res.getStatus() == SEARCHD_ERROR) {
-			return null;
-		} else {
-			return res;
-		}
+		return res;
 	}
 
 	/** Add new query with current settings to current search request. */
