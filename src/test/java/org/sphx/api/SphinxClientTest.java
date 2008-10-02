@@ -31,6 +31,10 @@ public class SphinxClientTest extends TestCase {
 		}
 	}
   	
+  	public void testEqualsBytesArray() throws Exception {
+  		assertEquals(new byte[]{11, 22 , 0xf}, new byte[]{11,  22 , 0xf});
+  	}
+  	
 	public void testResponseQuery() throws SphinxException {
 		SphinxResult result = sphinxClient.Query("wifi", "test1");
 		
@@ -389,8 +393,4 @@ public class SphinxClientTest extends TestCase {
 
 	}
 	
-	public void testEqualsBytesArray() throws Exception {
-		assertEquals(new byte[]{11, 22 , 0xf}, new byte[]{11,  22 , 0xf});
-		
-	}
 }
