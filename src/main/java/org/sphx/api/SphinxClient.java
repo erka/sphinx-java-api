@@ -273,7 +273,6 @@ public class SphinxClient {
 	private byte[] response ( DataInputStream sIn ) throws SphinxException{
 		
 		/*  response */
-		byte[] response = null;
 		short status = 0, ver = 0;
 		int len = 0;
 		
@@ -288,37 +287,30 @@ public class SphinxClient {
 				throw new SphinxException("invalid response packet size (len=" + len + ")");
 			}
 
-			response = new byte[len];
-			sIn.readFully ( response, 0, len );
+			byte[] response = new byte[len];
+			sIn.readFully(response, 0, len);
 
 			/* check status */
-			if ( status==SEARCHD_WARNING )
-			{
-				DataInputStream in = new DataInputStream ( new ByteArrayInputStream ( response ) );
-
-				int iWarnLen = in.readInt ();
-				_warning = new String ( response, 4, iWarnLen );
-
-				System.arraycopy ( response, 4+iWarnLen, response, 0, response.length-4-iWarnLen );
-
-			} else if ( status==SEARCHD_ERROR )
-			{
-				_error = "searchd error: " + new String ( response, 4, response.length-4 );
-				return null;
-
-			} else if ( status==SEARCHD_RETRY )
-			{
-				_error = "temporary searchd error: " + new String ( response, 4, response.length-4 );
-				return null;
-
-			} else if ( status!=SEARCHD_OK )
-			{
-				_error = "searched returned unknown status, code=" + status;
-				return null;
+			switch (status) {
+				case SEARCHD_OK:
+					break;
+				case SEARCHD_WARNING:
+					DataInputStream in = new DataInputStream ( new ByteArrayInputStream ( response ) );
+					int iWarnLen = in.readInt ();
+					_warning = new String ( response, 4, iWarnLen );
+					System.arraycopy ( response, 4+iWarnLen, response, 0, response.length-4-iWarnLen );
+					break;
+				case SEARCHD_ERROR:
+					throw new SphinxException("searchd error: " + new String ( response, 4, response.length-4 ));
+				case SEARCHD_RETRY:
+					throw new SphinxException("temporary searchd error: " + new String ( response, 4, response.length-4 ));
+				default:
+					throw new SphinxException("searched returned unknown status, code=" + status);
 			}
-
-		} catch ( IOException e )
-		{
+			
+			return response;
+			
+		} catch ( IOException e ){
 			String message = "received zero-sized searchd response (searchd crashed?): " + e.getMessage();
 			if (len != 0) {
 				/* get trace, to provide even more failure details */
@@ -333,12 +325,11 @@ public class SphinxClient {
 			}
 			throw new SphinxException(message);
 		}
-		return response;
 	}
+	
 
 	/** Internal method. Connect to searchd, send request, get response as DataInputStream. */
-	DataInputStream _DoRequest ( int command, int version, ByteArrayOutputStream req )
-	{
+	DataInputStream executeCommand (int command, int version, ByteArrayOutputStream req ){
 		/* connect */
 		Socket sock = null; 
 		InputStream sIn = null;
@@ -347,17 +338,13 @@ public class SphinxClient {
 			sock = getSocket();
 			sIn = sock.getInputStream();
 			sOut =  sock.getOutputStream();
-			DataInputStream dIn = new DataInputStream ( sIn );
-			DataOutputStream dOut = new DataOutputStream (sOut);
+			DataInputStream dIn = new DataInputStream(sIn);
+			DataOutputStream dOut = new DataOutputStream(sOut);
 	   		hello(dIn, dOut);
 	   		request(command, version, req, dOut);
-
-	   		byte[] response = response (dIn);
-			if (response == null){
-				return null;
-			}
+	   		byte[] data = response(dIn);
 			/* spawn that tampon */
-			return new DataInputStream ( new ByteArrayInputStream ( response ) );
+			return new DataInputStream(new ByteArrayInputStream (data));
 		} catch (ConnectException e) {
 			_error = "connection to " + _host + ":" + _port + " failed: " + e;
 		} catch (SphinxException e) {
@@ -809,7 +796,7 @@ public class SphinxClient {
 			return null;
 		}
 
-		DataInputStream in =_DoRequest ( SEARCHD_COMMAND_SEARCH, VER_COMMAND_SEARCH, reqBuf );
+		DataInputStream in =executeCommand ( SEARCHD_COMMAND_SEARCH, VER_COMMAND_SEARCH, reqBuf );
 		if ( in==null )
 			return null;
 
@@ -970,7 +957,7 @@ public class SphinxClient {
 			return null;
 		}
 
-		DataInputStream in = _DoRequest ( SEARCHD_COMMAND_EXCERPT, VER_COMMAND_EXCERPT, reqBuf );
+		DataInputStream in = executeCommand ( SEARCHD_COMMAND_EXCERPT, VER_COMMAND_EXCERPT, reqBuf );
 		if ( in==null )
 			return null;
 
@@ -1052,7 +1039,7 @@ public class SphinxClient {
 		}
 
 		/* get and parse response */
-		DataInputStream in = _DoRequest ( SEARCHD_COMMAND_UPDATE, VER_COMMAND_UPDATE, reqBuf );
+		DataInputStream in = executeCommand ( SEARCHD_COMMAND_UPDATE, VER_COMMAND_UPDATE, reqBuf );
 		if ( in==null )
 			return -1;
 
@@ -1088,7 +1075,7 @@ public class SphinxClient {
 		}
 
 		/* run request */
-		DataInputStream in = _DoRequest ( SEARCHD_COMMAND_KEYWORDS, VER_COMMAND_KEYWORDS, reqBuf );
+		DataInputStream in = executeCommand ( SEARCHD_COMMAND_KEYWORDS, VER_COMMAND_KEYWORDS, reqBuf );
 		if ( in==null )
 			return null;
 
