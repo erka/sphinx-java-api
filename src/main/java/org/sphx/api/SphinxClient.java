@@ -328,8 +328,9 @@ public class SphinxClient {
 	}
 	
 
-	/** Internal method. Connect to searchd, send request, get response as DataInputStream. */
-	DataInputStream executeCommand (int command, int version, ByteArrayOutputStream req ){
+	/** Internal method. Connect to searchd, send request, get response as DataInputStream. 
+	 * @throws SphinxException */
+	DataInputStream executeCommand (int command, int version, ByteArrayOutputStream req ) throws SphinxException{
 		/* connect */
 		Socket sock = null; 
 		InputStream sIn = null;
@@ -346,17 +347,16 @@ public class SphinxClient {
 			/* spawn that tampon */
 			return new DataInputStream(new ByteArrayInputStream (data));
 		} catch (ConnectException e) {
-			_error = "connection to " + _host + ":" + _port + " failed: " + e;
+			throw new SphinxException("connection to " + _host + ":" + _port + " failed: " + e);
 		} catch (SphinxException e) {
-			_error = e.getMessage();			
+			throw e;
 		} catch ( Exception e ) {
-			_error = "network error: " + e;
+			throw new SphinxException("network error: " + e);
 		} finally {
 			close(sIn);
 			close(sOut);
 			close(sock);
 		}
-		return null;
 	}
 
 	/**
@@ -650,10 +650,6 @@ public class SphinxClient {
 
 		AddQuery ( query, index, comment );
 		SphinxResult[] results = RunQueries();
-		if (results == null || results.length < 1) {
-			return null; /* probably network error; error message should be already filled */
-		}
-
 
 		SphinxResult res = results[0];
 		_warning = res.warning;
@@ -771,42 +767,31 @@ public class SphinxClient {
 	}
 
 	/** Run all previously added search queries. */
-	public SphinxResult[] RunQueries() throws SphinxException
-	{
-		if ( _reqs==null || _reqs.size()<1 )
-		{
-			_error = "no queries defined, issue AddQuery() first";
-			return null;
-		}
+	public SphinxResult[] RunQueries() throws SphinxException {
+		
+		myAssert( _reqs!=null && !_reqs.isEmpty(), "no queries defined, issue AddQuery() first");
 
 		/* build the mega-request */
 		int nreqs = _reqs.size();
 		ByteArrayOutputStream reqBuf = new ByteArrayOutputStream();
-		try
-		{
+		try {
 			DataOutputStream req = new DataOutputStream ( reqBuf );
 			req.writeInt ( nreqs );
-			for ( int i=0; i<nreqs; i++ )
+			for ( int i=0; i<nreqs; i++ ) {
 				req.write ( (byte[]) _reqs.get(i) );
+			}
 			req.flush ();
 
-		} catch ( Exception e )
-		{
-			_error = "internal error: failed to build request: " + e;
-			return null;
+		} catch ( Exception e ) {
+			throw new SphinxException ("internal error: failed to build request: " + e);
 		}
 
-		DataInputStream in =executeCommand ( SEARCHD_COMMAND_SEARCH, VER_COMMAND_SEARCH, reqBuf );
-		if ( in==null )
-			return null;
-
+		DataInputStream in = executeCommand ( SEARCHD_COMMAND_SEARCH, VER_COMMAND_SEARCH, reqBuf );
 		SphinxResult[] results = new SphinxResult [ nreqs ];
 		_reqs = new ArrayList();
 
-		try
-		{
-			for ( int ires=0; ires<nreqs; ires++ )
-			{
+		try {
+			for ( int ires=0; ires<nreqs; ires++ ) {
 				SphinxResult res = new SphinxResult();
 				results[ires] = res;
 
@@ -892,10 +877,8 @@ public class SphinxClient {
 			}
 			return results;
 
-		} catch ( IOException e )
-		{
-			_error = "incomplete reply";
-			return null;
+		} catch ( IOException e ) {
+			throw new SphinxException("incomplete reply");
 		}
 	}
 
@@ -925,8 +908,7 @@ public class SphinxClient {
 		/* build request */
 		ByteArrayOutputStream reqBuf = new ByteArrayOutputStream();
 		DataOutputStream req = new DataOutputStream ( reqBuf );
-		try
-		{
+		try{
 			req.writeInt(0);
 			int iFlags = 1; /* remove_spaces */
 			if ( ((Integer)opts.get("exact_phrase")).intValue()!=0 )	iFlags |= 2;
@@ -951,27 +933,20 @@ public class SphinxClient {
 
 			req.flush();
 
-		} catch ( Exception e )
-		{
-			_error = "internal error: failed to build request: " + e;
-			return null;
+		} catch ( Exception e ) {
+			throw new SphinxException("internal error: failed to build request: " + e);
 		}
 
 		DataInputStream in = executeCommand ( SEARCHD_COMMAND_EXCERPT, VER_COMMAND_EXCERPT, reqBuf );
-		if ( in==null )
-			return null;
-
-		try
-		{
+		try {
 			String[] res = new String [ docs.length ];
-			for ( int i=0; i<docs.length; i++ )
+			for ( int i=0; i<docs.length; i++ ){
 				res[i] = readNetUTF8 ( in );
+			}
 			return res;
 
-		} catch ( Exception e )
-		{
-			_error = "incomplete reply";
-			return null;
+		} catch ( Exception e ) {
+			throw new SphinxException("incomplete reply");
 		}
 	}
 
@@ -1014,8 +989,8 @@ public class SphinxClient {
 		/* build and send request */
 		ByteArrayOutputStream reqBuf = new ByteArrayOutputStream();
 		DataOutputStream req = new DataOutputStream ( reqBuf );
-		try
-		{
+		
+		try{
 			writeNetUTF8 ( req, index );
 
 			req.writeInt ( attrs.length );
@@ -1032,24 +1007,17 @@ public class SphinxClient {
 
 			req.flush();
 
-		} catch ( Exception e )
-		{
-			_error = "internal error: failed to build request: " + e;
-			return -1;
+		} catch ( Exception e ) {
+			throw new SphinxException("internal error: failed to build request: " + e);
 		}
 
 		/* get and parse response */
 		DataInputStream in = executeCommand ( SEARCHD_COMMAND_UPDATE, VER_COMMAND_UPDATE, reqBuf );
-		if ( in==null )
-			return -1;
 
-		try
-		{
+		try {
 			return in.readInt ();
-		} catch ( Exception e )
-		{
-			_error = "incomplete reply";
-			return -1;
+		} catch ( Exception e ) {
+			throw new SphinxException("incomplete reply");
 		}
 	}
 
@@ -1062,46 +1030,36 @@ public class SphinxClient {
 		/* build request */
 		ByteArrayOutputStream reqBuf = new ByteArrayOutputStream();
 		DataOutputStream req = new DataOutputStream ( reqBuf );
-		try
-		{
+		try {
 			writeNetUTF8 ( req, query );
 			writeNetUTF8 ( req, index );
 			req.writeInt ( hits ? 1 : 0 );
 
-		} catch ( Exception e )
-		{
-			_error = "internal error: failed to build request: " + e;
-			return null;
+		} catch (Exception e) {
+			throw new SphinxException("internal error: failed to build request: " + e);
 		}
 
 		/* run request */
 		DataInputStream in = executeCommand ( SEARCHD_COMMAND_KEYWORDS, VER_COMMAND_KEYWORDS, reqBuf );
-		if ( in==null )
-			return null;
-
 		/* parse reply */
-		try
-		{
+		try {
 			int iNumWords = in.readInt ();
 			Map[] res = new Map[iNumWords];
 
 			for ( int i=0; i<iNumWords; i++ )
 			{
-				res[i] = new LinkedHashMap ();
+				res[i] = new LinkedHashMap();
 				res[i].put ( "tokenized", readNetUTF8 ( in ) );
 				res[i].put ( "normalized", readNetUTF8 ( in ) );
-				if ( hits )
-				{
+				if (hits) {
 					res[i].put ( "docs", Long.valueOf(readDword ( in )) );
 					res[i].put ( "hits", Long.valueOf(readDword ( in )) );
 				}
 			}
 			return res;
 
-		} catch ( Exception e )
-		{
-			_error = "incomplete reply";
-			return null;
+		} catch ( Exception e ) {
+			throw new SphinxException("incomplete reply");
 		}
 	}
 }

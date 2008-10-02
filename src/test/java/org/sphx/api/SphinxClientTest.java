@@ -43,6 +43,13 @@ public class SphinxClientTest extends TestCase {
   		assertEquals(new byte[]{11, 22 , 0xf}, new byte[]{11,  22 , 0xf});
   	}
   	
+	public void testResponseQueryWithNonExistWord() throws SphinxException {
+		SphinxResult result = sphinxClient.Query("wifi" + System.currentTimeMillis(), "test1");
+		assertNotNull(result);
+		assertEquals(0, result.totalFound);	
+	}
+  	
+  	
 	public void testResponseQuery() throws SphinxException {
 		SphinxResult result = sphinxClient.Query("wifi", "test1");
 		
@@ -153,13 +160,16 @@ public class SphinxClientTest extends TestCase {
 
 	}
 
-	public void testUpdateAttributesWithNullAttribute() throws SphinxException {
+	public void testUpdateAttributesWithNullAttribute() {
 		String[] attrs = {null};
 		long[][] values = {{2,1}};
 		
-		int updated = sphinxClient.UpdateAttributes("test1", attrs, values);
-		assertEquals("searchd error: index test1: attribute '' not found", sphinxClient.GetLastError());
-		assertEquals(-1, updated);
+		try {
+			sphinxClient.UpdateAttributes("test1", attrs, values);
+			fail();
+		} catch (SphinxException e) {
+			assertEquals("searchd error: index test1: attribute '' not found", e.getMessage());
+		}
 	}
 
 	
@@ -327,11 +337,15 @@ public class SphinxClientTest extends TestCase {
 		*/
 	}
 	
-	public void testConnectToWrongServer() throws SphinxException{
-		sphinxClient.SetServer("localhost", 26550);
-		sphinxClient.Query("wifi", "test1");
+	public void testConnectToWrongServer(){
+		try {
+			sphinxClient.SetServer("localhost", 26550);
+			sphinxClient.Query("wifi", "test1");
+			fail();
+		} catch (SphinxException e) {
+			assertEquals("connection to localhost:26550 failed: java.net.ConnectException: Connection refused", e.getMessage());
+		}
 		assertEquals("", sphinxClient.GetLastWarning());
-		assertEquals("connection to localhost:26550 failed: java.net.ConnectException: Connection refused", sphinxClient.GetLastError());
 	}
 	
 	
@@ -498,8 +512,12 @@ public class SphinxClientTest extends TestCase {
 				ByteArrayOutputStream data = new ByteArrayOutputStream();
 				byte[] bs = new byte[]{0,2,3,4,5,3,2,3,4,4,3,3};
 				data.write(bs);
-				sphinxClient.executeCommand( SphinxClient.SEARCHD_COMMAND_UPDATE, SphinxClient.VER_COMMAND_UPDATE, data);
-				assertEquals("expected searchd protocol version 1+, got version 0", sphinxClient.GetLastError());
+				try {
+					sphinxClient.executeCommand( SphinxClient.SEARCHD_COMMAND_UPDATE, SphinxClient.VER_COMMAND_UPDATE, data);
+					fail();
+				} catch (SphinxException e) {
+					assertEquals("expected searchd protocol version 1+, got version 0", e.getMessage());
+				}
 				assertTrue(socket.isClosed());
 			}
 	
@@ -517,12 +535,16 @@ public class SphinxClientTest extends TestCase {
 		ByteArrayOutputStream data = new ByteArrayOutputStream();
 		byte[] bs = new byte[]{0,2,3,4,5,3,2,3,4,4,3,3};
 		data.write(bs);
-		sphinxClient.executeCommand( SphinxClient.SEARCHD_COMMAND_UPDATE, SphinxClient.VER_COMMAND_UPDATE, data);
-		assertEquals("connection to localhost:3312 failed: java.net.ConnectException: error happened", sphinxClient.GetLastError());
+		try {
+			sphinxClient.executeCommand( SphinxClient.SEARCHD_COMMAND_UPDATE, SphinxClient.VER_COMMAND_UPDATE, data);
+			fail();
+		} catch (SphinxException e) {
+			assertEquals("connection to localhost:3312 failed: java.net.ConnectException: error happened", e.getMessage());
+		}
 		assertTrue(socket.isClosed());
 	}
 
-	public void testExecuteCommand() throws IOException {
+	public void testExecuteCommand() throws IOException, SphinxException {
 			byte[] hello = new byte[]{0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 3, 2, 5, 12};
 			final InputStream in = new ByteArrayInputStream(hello);
 			final ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -583,6 +605,15 @@ public class SphinxClientTest extends TestCase {
 			sphinxClient.close(c);
 			fail();
 		} catch (IllegalArgumentException e) {
+		}
+	}
+
+	public void testRunQueries() {
+		try {
+			sphinxClient.RunQueries();
+			fail();
+		} catch (SphinxException e) {
+			assertEquals("no queries defined, issue AddQuery() first", e.getMessage());
 		}
 	}
 
