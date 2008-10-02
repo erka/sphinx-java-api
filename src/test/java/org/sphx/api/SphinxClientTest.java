@@ -51,6 +51,31 @@ public class SphinxClientTest extends TestCase {
 	}
 	
 	
+	public void testResponseQueryForRunQuery() throws SphinxException {
+		
+		int addQuery = sphinxClient.AddQuery("wifi", "test1", "");
+		assertEquals(0, addQuery);
+		addQuery = sphinxClient.AddQuery("thisstringyouwillneverfound", "test1", "");
+		assertEquals(1, addQuery);
+
+		SphinxResult[] results = sphinxClient.RunQueries();
+		
+		assertEquals(3, results[0].totalFound);
+		assertEquals(3, results[0].matches.length);
+		SphinxWordInfo sphinxWordInfo = results[0].words[0];
+		assertEquals("wifi", sphinxWordInfo.word);
+		assertEquals(6, sphinxWordInfo.hits);
+		assertEquals(3, sphinxWordInfo.docs);
+
+		assertEquals(0, results[1].totalFound);
+		assertEquals(0, results[1].matches.length);
+		sphinxWordInfo = results[1].words[0];
+		assertEquals("thisstringyouwillneverfound", sphinxWordInfo.word);
+		assertEquals(0, sphinxWordInfo.hits);
+		assertEquals(0, sphinxWordInfo.docs);
+
+	}
+	
 	public void testResponseInBuildExcerpts() throws SphinxException {
 		String[] docs = {"what the world", "London is the capital of Great Britain"};
 		String index = "test1";
@@ -71,7 +96,8 @@ public class SphinxClientTest extends TestCase {
 		values[0][0] = 2;
 		values[0][1] = 1;
 		
-		sphinxClient.UpdateAttributes("test1", attrs, values);
+		int updated = sphinxClient.UpdateAttributes("test1", attrs, values);
+		assertEquals(1, updated);
 		
 		SphinxResult result = sphinxClient.Query("wifi", "test1");
 		SphinxMatch[] matchs = result.matches;
@@ -79,7 +105,8 @@ public class SphinxClientTest extends TestCase {
 		assertEquals(new Long(1), matchs[0].attrValues.get(1));
 
 		values[0][1] = 2;
-		sphinxClient.UpdateAttributes("test1", attrs, values);
+		updated = sphinxClient.UpdateAttributes("test1", attrs, values);
+		assertEquals(1, updated);
 		
 		result = sphinxClient.Query("wifi", "test1");
 		matchs = result.matches;
