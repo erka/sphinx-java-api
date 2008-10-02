@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -240,39 +241,18 @@ public class SphinxClient {
 		return v;
 	}
 
-	/** Internal method. Connect to searchd and exchange versions. */
-	Socket _Connect()
-	{
-		Socket sock = null;
-		try
-		{
-			sock = getSocket();
-
+	/** Internal method. Connect to searchd and exchange versions. 
+	 * @throws SphinxException */
+	private void _Connect(Socket sock) throws SphinxException, IOException {
 			DataInputStream sIn = new DataInputStream ( sock.getInputStream() );
 			int version = sIn.readInt();
 			if ( version<1 )
 			{
-				sock.close ();
-				_error = "expected searchd protocol version 1+, got version " + version;
-				return null;
+				throw new SphinxException("expected searchd protocol version 1+, got version " + version);
 			}
 
 			DataOutputStream sOut = new DataOutputStream ( sock.getOutputStream() );
 			sOut.writeInt ( VER_MAJOR_PROTO );
-
-		} catch ( IOException e )
-		{
-			_error = "connection to " + _host + ":" + _port + " failed: " + e;
-
-			try
-			{
-				if ( sock!=null )
-					sock.close ();
-			} catch ( IOException e1 ) {}
-			return null;
-		}
-
-		return sock;
 	}
 
 	protected Socket getSocket() throws UnknownHostException, IOException {
@@ -287,23 +267,17 @@ public class SphinxClient {
 		/* connect */
 		DataInputStream sIn = null;
 		InputStream SockInput = null;
+		
+		/*  response */
+		byte[] response = null;
+		short status = 0, ver = 0;
+		int len = 0;
+		
 		try
 		{
 			SockInput = sock.getInputStream();
 			sIn = new DataInputStream ( SockInput );
-
-		} catch ( IOException e )
-		{
-			_error = "getInputStream() failed: " + e;
-			return null;
-		}
-
-		/* read response */
-		byte[] response = null;
-		short status = 0, ver = 0;
-		int len = 0;
-		try
-		{
+		
 			/* read status fields */
 			status = sIn.readShort();
 			ver = sIn.readShort();
@@ -383,33 +357,41 @@ public class SphinxClient {
 	DataInputStream _DoRequest ( int command, int version, ByteArrayOutputStream req )
 	{
 		/* connect */
-		Socket sock = _Connect();
-		if ( sock==null )
-			return null;
+		Socket sock = null; 
+	   	try {
+			sock = getSocket();
 
-		/* send request */
-	   	byte[] reqBytes = req.toByteArray();
-	   	try
-	   	{
+	   		_Connect(sock);
+	   		/* send request */
 			DataOutputStream sockDS = new DataOutputStream ( sock.getOutputStream() );
 			sockDS.writeShort ( command );
 			sockDS.writeShort ( version );
+			byte[] reqBytes = req.toByteArray();
 			sockDS.writeInt ( reqBytes.length );
 			sockDS.write ( reqBytes );
-
-		} catch ( Exception e )
-		{
+			
+			/* get response */
+			byte[] response = _GetResponse ( sock );
+			if (response == null){
+				return null;
+			}
+			/* spawn that tampon */
+			return new DataInputStream ( new ByteArrayInputStream ( response ) );
+		} catch (ConnectException e) {
+			_error = "connection to " + _host + ":" + _port + " failed: " + e;
+		} catch (SphinxException e) {
+			_error = e.getMessage();			
+		} catch ( Exception e ) {
 			_error = "network error: " + e;
-			return null;
+		} finally {
+			if (sock != null) {
+				try {
+					sock.close();
+				} catch (IOException e) {
+				}
+			}
 		}
-
-		/* get response */
-		byte[] response = _GetResponse ( sock );
-		if ( response==null )
-			return null;
-
-		/* spawn that tampon */
-		return new DataInputStream ( new ByteArrayInputStream ( response ) );
+		return null;
 	}
 
 	/** Set matches offset and limit to return to client, max matches to retrieve on server, and cutoff. */
