@@ -268,8 +268,9 @@ public class SphinxClient {
 		return socket;
 	}
 
-	/** Internal method. Get and check response packet from searchd. */
-	private byte[] _GetResponse ( DataInputStream sIn ){
+	/** Internal method. Get and check response packet from searchd. 
+	 * @throws SphinxException */
+	private byte[] response ( DataInputStream sIn ) throws SphinxException{
 		
 		/*  response */
 		byte[] response = null;
@@ -277,17 +278,14 @@ public class SphinxClient {
 		int len = 0;
 		
 		try{
-		
 			/* read status fields */
 			status = sIn.readShort();
 			ver = sIn.readShort();
 			len = sIn.readInt();
 
 			/* read response if non-empty */
-			if ( len<=0 )
-			{
-				_error = "invalid response packet size (len=" + len + ")";
-				return null;
+			if (len <= 0){
+				throw new SphinxException("invalid response packet size (len=" + len + ")");
 			}
 
 			response = new byte[len];
@@ -321,8 +319,8 @@ public class SphinxClient {
 
 		} catch ( IOException e )
 		{
-			if ( len!=0 )
-			{
+			String message = "received zero-sized searchd response (searchd crashed?): " + e.getMessage();
+			if (len != 0) {
 				/* get trace, to provide even more failure details */
 				PrintWriter ew = new PrintWriter ( new StringWriter() );
 				e.printStackTrace ( ew );
@@ -331,12 +329,9 @@ public class SphinxClient {
 				String sTrace = ew.toString ();
 
 				/* build error message */
-				_error = "failed to read searchd response (status=" + status + ", ver=" + ver + ", len=" + len + ", trace=" + sTrace +")";
-			} else
-			{
-				_error = "received zero-sized searchd response (searchd crashed?): " + e.getMessage();
+				message = "failed to read searchd response (status=" + status + ", ver=" + ver + ", len=" + len + ", trace=" + sTrace +")";
 			}
-			return null;
+			throw new SphinxException(message);
 		}
 		return response;
 	}
@@ -357,7 +352,7 @@ public class SphinxClient {
 	   		hello(dIn, dOut);
 	   		request(command, version, req, dOut);
 
-	   		byte[] response = _GetResponse (dIn);
+	   		byte[] response = response (dIn);
 			if (response == null){
 				return null;
 			}
