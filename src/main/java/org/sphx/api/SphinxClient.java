@@ -81,17 +81,17 @@ public class SphinxClient {
 
 
 	/* searchd commands */
-	private final static int SEARCHD_COMMAND_SEARCH		= 0;
-	private final static int SEARCHD_COMMAND_EXCERPT	= 1;
-	private final static int SEARCHD_COMMAND_UPDATE		= 2;
-	private final static int SEARCHD_COMMAND_KEYWORDS	= 3;
+	public final static int SEARCHD_COMMAND_SEARCH		= 0;
+	public final static int SEARCHD_COMMAND_EXCERPT	= 1;
+	public final static int SEARCHD_COMMAND_UPDATE		= 2;
+	public final static int SEARCHD_COMMAND_KEYWORDS	= 3;
 
 	/* searchd command versions */
-	private final static int VER_MAJOR_PROTO		= 0x1;
-	private final static int VER_COMMAND_SEARCH		= 0x113;
-	private final static int VER_COMMAND_EXCERPT	= 0x100;
-	private final static int VER_COMMAND_UPDATE		= 0x101;
-	private final static int VER_COMMAND_KEYWORDS	= 0x100;
+	public final static int VER_MAJOR_PROTO		= 0x1;
+	public final static int VER_COMMAND_SEARCH		= 0x113;
+	public final static int VER_COMMAND_EXCERPT	= 0x100;
+	public final static int VER_COMMAND_UPDATE		= 0x101;
+	public final static int VER_COMMAND_KEYWORDS	= 0x100;
 
 	/* filter types */
 	private final static int SPH_FILTER_VALUES		= 0;
@@ -132,7 +132,7 @@ public class SphinxClient {
 	private int			_maxQueryTime;
 	private Map			_fieldWeights;
 
-	private static final int SPH_CLIENT_TIMEOUT_MILLISEC	= 30000;
+	public static final int SPH_CLIENT_TIMEOUT_MILLISEC	= 30000;
 
 	/** Creates a new SphinxClient instance. */
 	public SphinxClient()
@@ -247,7 +247,6 @@ public class SphinxClient {
 		try
 		{
 			sock = getSocket();
-			sock.setSoTimeout ( SPH_CLIENT_TIMEOUT_MILLISEC );
 
 			DataInputStream sIn = new DataInputStream ( sock.getInputStream() );
 			int version = sIn.readInt();
@@ -277,7 +276,9 @@ public class SphinxClient {
 	}
 
 	protected Socket getSocket() throws UnknownHostException, IOException {
-		return new Socket ( _host, _port );
+		Socket socket = new Socket ( _host, _port );
+		socket.setSoTimeout ( SPH_CLIENT_TIMEOUT_MILLISEC );
+		return socket;
 	}
 
 	/** Internal method. Get and check response packet from searchd. */
@@ -379,7 +380,7 @@ public class SphinxClient {
 	}
 
 	/** Internal method. Connect to searchd, send request, get response as DataInputStream. */
-	private DataInputStream _DoRequest ( int command, int version, ByteArrayOutputStream req )
+	DataInputStream _DoRequest ( int command, int version, ByteArrayOutputStream req )
 	{
 		/* connect */
 		Socket sock = _Connect();

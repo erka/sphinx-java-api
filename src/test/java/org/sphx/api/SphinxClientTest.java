@@ -536,4 +536,54 @@ public class SphinxClientTest extends TestCase {
 		assertTrue(socket.isClosed());
 	}
 
+	public void test_DoRequest() throws IOException {
+		byte[] hello = new byte[]{0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 3, 2, 5, 12};
+		final InputStream in = new ByteArrayInputStream(hello);
+		final ByteArrayOutputStream out = new ByteArrayOutputStream();
+		final Socket socket = new Socket () {
+		    public InputStream getInputStream() throws IOException {
+		    	return in;
+		    }
+		    public OutputStream getOutputStream() throws IOException {
+				return out;
+		    }	
+		};
+		sphinxClient = new SphinxClient(){
+			protected Socket getSocket() throws UnknownHostException, IOException {
+				return socket;
+			}
+		};
+		ByteArrayOutputStream data = new ByteArrayOutputStream();
+		byte[] bs = new byte[]{0,2,3,4,5,3,2,3,4,4,3,3};
+		data.write(bs);
+		
+		DataInputStream res = sphinxClient._DoRequest( SphinxClient.SEARCHD_COMMAND_UPDATE, SphinxClient.VER_COMMAND_UPDATE, data);
+		System.out.println(sphinxClient.GetLastError());
+		byte[] response = new byte[3];
+		res.readFully(response);
+		assertEquals(new byte[]{2,5,12}, response);
+		
+		byte[] expectedBytes = {0, 0, 0, 1, 0, 2, 01, 01, 0, 0, 0, 12, 0,2,3,4,5,3,2,3,4,4,3,3};
+		assertEquals(expectedBytes, out.toByteArray());
+		
+	}
+
+	public void testGetSocket() {
+		Socket socket = null;
+		
+		try {
+			socket = sphinxClient.getSocket();
+			assertEquals(SphinxClient.SPH_CLIENT_TIMEOUT_MILLISEC, socket.getSoTimeout());
+		} catch (Exception e) {
+			fail();
+		} finally {
+			if (socket != null) {
+				try {
+					socket.close();
+				} catch (IOException e) {
+				}
+			}
+		}
+	}
+
 }
