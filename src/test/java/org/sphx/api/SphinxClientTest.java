@@ -1,8 +1,14 @@
 package org.sphx.api;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -357,7 +363,11 @@ public class SphinxClientTest extends TestCase {
 		} catch (SphinxException e) {
 			assertEquals("delay must not be negative", e.getMessage());
 		}
-		
+		try {
+			sphinxClient.SetRetries(1, 1);
+		}catch (SphinxException e) {
+			fail();
+		}
 	}
 	
 	
@@ -392,5 +402,138 @@ public class SphinxClientTest extends TestCase {
 		assertEquals(expected, byteArray);
 
 	}
+
+	public void testReadDword() throws IOException {
+
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutputStream dout = new DataOutputStream(baos);
+		
+		dout.writeInt(0);
+		dout.writeInt(232220);
+		dout.writeInt(-232220);
+		dout.writeInt(Integer.MAX_VALUE);
+		dout.writeInt(Integer.MIN_VALUE);
+		
+		DataInputStream istream = new DataInputStream(new ByteArrayInputStream(baos.toByteArray()));
+		assertEquals(0, SphinxClient.readDword(istream));
+		assertEquals(232220, SphinxClient.readDword(istream));
+		assertEquals(SphinxClient.MAX_DWORD - 232220, SphinxClient.readDword(istream));
+		assertEquals(Integer.MAX_VALUE, SphinxClient.readDword(istream));
+		assertEquals(SphinxClient.MAX_DWORD + Integer.MIN_VALUE, SphinxClient.readDword(istream));
+
+	}
+
+	public void testSetLimits() {
+		try {
+			sphinxClient.SetLimits(-1, 1);
+			fail();
+		} catch (SphinxException e) {
+			assertEquals("offset must not be negative", e.getMessage());
+		}
+		
+		try {
+			sphinxClient.SetLimits(0, 0, -1);
+			fail();
+		} catch (SphinxException e) {
+			assertEquals("limit must be positive", e.getMessage());
+		}
+
+		try {
+			sphinxClient.SetLimits(1, 1, 0);
+			fail();
+		} catch (SphinxException e) {
+			assertEquals("max must be positive", e.getMessage());
+		}
+
+		try {
+			sphinxClient.SetLimits(1, 1, 1, -1);
+			fail();
+		} catch (SphinxException e) {
+			assertEquals("cutoff must not be negative", e.getMessage());
+		}
+
+		try {
+			sphinxClient.SetLimits(1, 1, 1, 1);
+		} catch (SphinxException e) {
+			fail();
+		}
+
+	}
+
+	public void testSetMaxQueryTime() {
+		try {
+			sphinxClient.SetMaxQueryTime(-1);
+			fail();
+		} catch (SphinxException e) {
+			assertEquals("max_query_time must not be negative", e.getMessage());
+		}
+		try {
+			sphinxClient.SetMaxQueryTime(0);
+			sphinxClient.SetMaxQueryTime(1);
+		} catch (SphinxException e) {
+			fail();
+		}
+
+	}
+
+	public void test_Connect() {
+		byte[] hello = new byte[]{0, 0, 0, 1};
+		final InputStream in = new ByteArrayInputStream(hello);
+		final ByteArrayOutputStream out = new ByteArrayOutputStream();
+		final Socket socket = new Socket () {
+		    public InputStream getInputStream() throws IOException {
+		    	return in;
+		    }
+		    public OutputStream getOutputStream() throws IOException {
+				return out;
+		    }	
+		};
+		sphinxClient = new SphinxClient(){
+			protected Socket getSocket() throws UnknownHostException, IOException {
+				return socket;
+			}
+		};
+		assertNotNull(sphinxClient._Connect());
+		assertEquals(hello, out.toByteArray());
+	}
 	
+	public void test_ConnectWithWrongVersion() {
+		byte[] hello = new byte[]{0, 0, 0, 0};
+		final InputStream in = new ByteArrayInputStream(hello);
+		final Socket socket = new Socket () {
+		    public InputStream getInputStream() throws IOException {
+		    	return in;
+		    }
+		};
+		sphinxClient = new SphinxClient(){
+			protected Socket getSocket() throws UnknownHostException, IOException {
+				return socket;
+			}
+		};
+		assertNull(sphinxClient._Connect());
+		assertEquals("expected searchd protocol version 1+, got version 0", sphinxClient.GetLastError());
+		assertTrue(socket.isClosed());
+	}
+	
+	public void test_ConnectWithIOException() {
+		byte[] hello = new byte[]{0, 0, 0, 1};
+		final InputStream in = new ByteArrayInputStream(hello);
+		final Socket socket = new Socket () {
+		    public InputStream getInputStream() throws IOException {
+		    	return in;
+		    }
+		    public OutputStream getOutputStream() throws IOException {
+		    	throw new IOException("error happened");
+		    }	
+		};
+		sphinxClient = new SphinxClient(){
+			protected Socket getSocket() throws UnknownHostException, IOException {
+				return socket;
+			}
+		};
+		assertNull(sphinxClient._Connect());
+		assertEquals("connection to localhost:3312 failed: java.io.IOException: error happened", sphinxClient.GetLastError());
+		assertTrue(socket.isClosed());
+	}
+
 }

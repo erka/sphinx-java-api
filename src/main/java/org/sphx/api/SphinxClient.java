@@ -24,14 +24,16 @@ import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 /** Sphinx client class */
-public class SphinxClient
-{
+public class SphinxClient {
+	
+	public final static long MAX_DWORD = 4294967296L; /*2 ^ 32*/
 	/* matching modes */
 	public final static int SPH_MATCH_ALL			= 0;
 	public final static int SPH_MATCH_ANY			= 1;
@@ -224,27 +226,27 @@ public class SphinxClient
 	}
 
 	/** Internal method. String IO helper. */
-	static String readNetUTF8(DataInputStream istream) throws IOException{
+	static String readNetUTF8(DataInputStream istream) throws IOException {
 		istream.readUnsignedShort (); /* searchd emits dword lengths, but Java expects words; lets just skip first 2 bytes */
 		return istream.readUTF ();
 	}
 
 	/** Internal method. Unsigned int IO helper. */
-	private static long readDword ( DataInputStream istream ) throws IOException
-	{
-		long v = (long) istream.readInt ();
-		if ( v<0 )
-			v += 4294967296L;
+	static long readDword ( DataInputStream istream ) throws IOException {
+		long v = (long) istream.readInt();
+		if (v < 0) {
+			v += MAX_DWORD;
+		}
 		return v;
 	}
 
 	/** Internal method. Connect to searchd and exchange versions. */
-	private Socket _Connect()
+	Socket _Connect()
 	{
 		Socket sock = null;
 		try
 		{
-			sock = new Socket ( _host, _port );
+			sock = getSocket();
 			sock.setSoTimeout ( SPH_CLIENT_TIMEOUT_MILLISEC );
 
 			DataInputStream sIn = new DataInputStream ( sock.getInputStream() );
@@ -272,6 +274,10 @@ public class SphinxClient
 		}
 
 		return sock;
+	}
+
+	protected Socket getSocket() throws UnknownHostException, IOException {
+		return new Socket ( _host, _port );
 	}
 
 	/** Internal method. Get and check response packet from searchd. */
