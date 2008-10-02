@@ -212,21 +212,19 @@ public class SphinxClient
 	}
 
 	/** Internal method. String IO helper. */
-	private static void writeNetUTF8 ( DataOutputStream ostream, String str ) throws IOException
-	{
-		if ( str==null )
-		{
-			ostream.writeInt ( 0 );
-		} else
-		{
-			ostream.writeShort ( 0 );
-			ostream.writeUTF ( str );
+	static void writeNetUTF8(DataOutputStream ostream, String str)
+			throws IOException {
+		
+		ostream.writeShort(0);
+		if (str == null) {
+			ostream.writeShort(0);
+		} else {
+			ostream.writeUTF(str);
 		}
 	}
 
 	/** Internal method. String IO helper. */
-	private static String readNetUTF8(DataInputStream istream) throws IOException
-	{
+	static String readNetUTF8(DataInputStream istream) throws IOException{
 		istream.readUnsignedShort (); /* searchd emits dword lengths, but Java expects words; lets just skip first 2 bytes */
 		return istream.readUTF ();
 	}

@@ -1,5 +1,8 @@
 package org.sphx.api;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,8 +20,20 @@ public class SphinxClientTest extends TestCase {
 		sphinxClient = new SphinxClient();
 	}
 
+  	static public void assertEquals(byte[] expected, byte[] actual) {
+		if (expected.length != actual.length){
+			fail("array don't equals");
+		}
+		for (int i = 0; i < expected.length; i++) {
+			if (expected[i] != actual[i]) {
+				fail("array don't equals");
+			}
+		}
+	}
+  	
 	public void testResponseQuery() throws SphinxException {
 		SphinxResult result = sphinxClient.Query("wifi", "test1");
+		
 		assertEquals(3, result.totalFound);
 		assertEquals(3, result.matches.length);
 		assertTrue(result.time > -1.0);
@@ -49,6 +64,19 @@ public class SphinxClientTest extends TestCase {
 		assertEquals(6, sphinxWordInfo.hits);
 		assertEquals(3, sphinxWordInfo.docs);
 	}
+	
+	public void testResponseQueryWrongWay() {
+		try {
+			int addQuery = sphinxClient.AddQuery("wifi", "test1", "");
+			assertEquals(0, addQuery);
+			sphinxClient.Query("test");
+			fail();
+		}catch (SphinxException e) {
+			assertTrue(true);
+			assertEquals("AddQuery() and Query() can not be combined; use RunQueries() instead", e.getMessage());
+		}
+	} 
+	
 	
 	
 	public void testResponseQueryForRunQuery() throws SphinxException {
@@ -92,9 +120,7 @@ public class SphinxClientTest extends TestCase {
 	
 	public void testUpdateAttributes() throws SphinxException {
 		String[] attrs = {"group_id"};
-		long[][] values = new long[1][2];
-		values[0][0] = 2;
-		values[0][1] = 1;
+		long[][] values = {{2,1}};
 		
 		int updated = sphinxClient.UpdateAttributes("test1", attrs, values);
 		assertEquals(1, updated);
@@ -114,6 +140,104 @@ public class SphinxClientTest extends TestCase {
 		assertEquals(new Long(2), matchs[0].attrValues.get(1));
 
 	}
+
+	public void testUpdateAttributesWithNullAttribute() throws SphinxException {
+		String[] attrs = {null};
+		long[][] values = {{2,1}};
+		
+		int updated = sphinxClient.UpdateAttributes("test1", attrs, values);
+		assertEquals("searchd error: index test1: attribute '' not found", sphinxClient.GetLastError());
+		assertEquals(-1, updated);
+	}
+
+	
+	public void testUpdateAttributesWithWrongIndexParam() {
+		
+		
+		try {
+			sphinxClient.UpdateAttributes(null, null, null);
+			fail();
+		} catch (SphinxException e) {
+			assertTrue(true);
+			assertEquals("no index name provided", e.getMessage());
+		}
+
+		try {
+			sphinxClient.UpdateAttributes("", null, null);
+			fail();
+		} catch (SphinxException e) {
+			assertTrue(true);
+			assertEquals("no index name provided", e.getMessage());
+		}
+	}
+
+	public void testUpdateAttributesWithWrongAttrParam() {
+		try {
+			sphinxClient.UpdateAttributes("test1", null, null);
+			fail();
+		} catch (SphinxException e) {
+			assertTrue(true);
+			assertEquals("no attribute names provided", e.getMessage());
+		}
+		try {
+			sphinxClient.UpdateAttributes("test1", new String[0], null);
+			fail();
+		} catch (SphinxException e) {
+			assertTrue(true);
+			assertEquals("no attribute names provided", e.getMessage());
+		}
+
+		/* TODO
+		try {
+			sphinxClient.UpdateAttributes("test1", new String[1], null);
+			fail();
+		} catch (SphinxException e) {
+			assertTrue(true);
+			assertEquals("no attribute names provided", e.getMessage());
+		}
+		*/
+	}
+	
+
+	public void testUpdateAttributesWithWrongValuesParam() {
+		String[] strings = new String[] {"group_id", "created_at"};
+		try {
+			
+			sphinxClient.UpdateAttributes("test1", strings, null);
+			fail();
+		} catch (SphinxException e) {
+			assertTrue(true);
+			assertEquals("no update entries provided", e.getMessage());
+		}
+
+		try {
+			sphinxClient.UpdateAttributes("test1", strings, new long[0][0]);
+			fail();
+		} catch (SphinxException e) {
+			assertTrue(true);
+			assertEquals("no update entries provided", e.getMessage());
+		}
+
+		try {
+			long values[][] = {null};
+			sphinxClient.UpdateAttributes("test1", strings, values);
+			fail();
+		} catch (SphinxException e) {
+			assertTrue(true);
+			assertEquals("update entry #0 is null", e.getMessage());
+		}
+
+		try {
+			long values[][] = {{0, 1}};
+			sphinxClient.UpdateAttributes("test1", strings, values);
+			fail();
+		} catch (SphinxException e) {
+			assertTrue(true);
+			assertEquals("update entry #0 has wrong length", e.getMessage());
+		}
+
+	}
+	
 	
 	public void testWrongHostAndPortParameters() {
 		
@@ -157,6 +281,7 @@ public class SphinxClientTest extends TestCase {
 		}
 		
 		/*
+		  TODO
 		try {
 			new SphinxClient(null, 10);
 			fail();
@@ -212,6 +337,60 @@ public class SphinxClientTest extends TestCase {
 		assertEquals("wifi", buildKeywords[0].get("normalized"));
 		assertNull(buildKeywords[0].get("docs"));
 		assertNull(buildKeywords[0].get("hits"));
+		
+	}
+	
+	public void testSetRetries() {
+		try {
+			sphinxClient.SetRetries(-1);
+			fail();
+		} catch (SphinxException e) {
+			assertEquals("count must not be negative", e.getMessage());
+		}
+		try {
+			sphinxClient.SetRetries(1, -1);
+			fail();
+		} catch (SphinxException e) {
+			assertEquals("delay must not be negative", e.getMessage());
+		}
+		
+	}
+	
+	
+	public void testSetGroupBy(){
+		try {
+			sphinxClient.SetGroupBy("group_id", SphinxClient.SPH_ATTR_ORDINAL);
+		} catch (SphinxException e) {
+			fail();
+		}
+		try {
+			sphinxClient.SetGroupBy("group_id", -10002);
+			fail();
+		} catch (SphinxException e) {
+			assertEquals("unknown func value; use one of the available SPH_GROUPBY_xxx constants", e.getMessage());
+		}
+
+	}
+
+	public void testWriteNetUTF8() throws IOException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		DataOutputStream ostream = new DataOutputStream(baos);
+		SphinxClient.writeNetUTF8(ostream, "test");
+		byte[] byteArray = baos.toByteArray();
+		byte[] expected = {0, 0, 0, 4, 116, 101, 115, 116};
+		assertEquals(expected, byteArray);
+		
+		baos = new ByteArrayOutputStream();
+		ostream = new DataOutputStream(baos);
+		SphinxClient.writeNetUTF8(ostream, null);
+		byteArray = baos.toByteArray();
+		expected = new byte[] {0, 0, 0, 0};
+		assertEquals(expected, byteArray);
+
+	}
+	
+	public void testEqualsBytesArray() throws Exception {
+		assertEquals(new byte[]{11, 22 , 0xf}, new byte[]{11,  22 , 0xf});
 		
 	}
 }
