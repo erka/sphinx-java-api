@@ -57,9 +57,9 @@ public class SphinxResult {
 	}
 
 	/** Set query status (accessible from API package only).
-	 * @param status status for result.
+	 * @param curStatus status for result.
 	 */
-	final void setStatus(final int status) {
-		this.status = status;
+	final void setStatus(final int curStatus) {
+		this.status = curStatus;
 	}
 }

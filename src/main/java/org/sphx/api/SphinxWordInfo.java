@@ -6,23 +6,48 @@ public class SphinxWordInfo {
 	 * Word form as returned from search daemon, stemmed or otherwise
 	 * postprocessed.
 	 */
-	public String word;
+	private String word;
 
 	/** Total amount of matching documents in collection. */
-	public long docs;
+	private long docs;
 
 	/** Total amount of hits (occurences) in collection. */
-	public long hits;
+	private long hits;
 
 	/** Trivial constructor.
-	 * @param word the word.
-	 * @param docs docs found.
-	 * @param hits  hits found.
+	 * @param currentWord the word.
+	 * @param currentDocs docs found.
+	 * @param currentHits  hits found.
 	 */
-	public SphinxWordInfo(final String word, final long docs,
-						  final long hits) {
-		this.word = word;
-		this.docs = docs;
-		this.hits = hits;
+	public SphinxWordInfo(final String currentWord,
+			final long currentDocs, final long currentHits) {
+		this.word = currentWord;
+		this.docs = currentDocs;
+		this.hits = currentHits;
+	}
+
+	/**
+	 * Get Word form as returned from search daemon, stemmed or
+	 *  otherwise postprocessed.
+	 * @return the word
+	 */
+	public final String getWord() {
+		return word;
+	}
+
+	/**
+	 * Get total amount of matching documents in collection.
+	 * @return the docs.
+	 */
+	public final long getDocs() {
+		return docs;
+	}
+
+	/**
+	 * Get total amount of hits (occurences) in collection.
+	 * @return the hits
+	 */
+	public final long getHits() {
+		return hits;
 	}
 }

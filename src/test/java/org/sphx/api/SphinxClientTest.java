@@ -80,26 +80,26 @@ public class SphinxClientTest extends TestCase {
 		assertEquals(3, result.total);
 		SphinxMatch[] matchs = result.matches;
 		
-		assertEquals(2, matchs[0].docId);
-		assertEquals(2, matchs[0].weight);
-		assertEquals(new Long(1175658555), matchs[0].attrValues.get(0));
-		assertEquals(new Long(2), matchs[0].attrValues.get(1));
+		assertEquals(2, matchs[0].getDocId());
+		assertEquals(2, matchs[0].getWeight());
+		assertEquals(new Long(1175658555), matchs[0].getAttrValues().get(0));
+		assertEquals(new Long(2), matchs[0].getAttrValues().get(1));
 
-		assertEquals(3, matchs[1].docId);
-		assertEquals(2, matchs[1].weight);
-		assertEquals(new Long(1175658647), matchs[1].attrValues.get(0));
-		assertEquals(new Long(1), matchs[1].attrValues.get(1));
+		assertEquals(3, matchs[1].getDocId());
+		assertEquals(2, matchs[1].getWeight());
+		assertEquals(new Long(1175658647), matchs[1].getAttrValues().get(0));
+		assertEquals(new Long(1), matchs[1].getAttrValues().get(1));
 
-		assertEquals(1, matchs[2].docId);
-		assertEquals(1, matchs[2].weight);
-		assertEquals(new Long(1175658490), matchs[2].attrValues.get(0));
-		assertEquals(new Long(1), matchs[2].attrValues.get(1));
+		assertEquals(1, matchs[2].getDocId());
+		assertEquals(1, matchs[2].getWeight());
+		assertEquals(new Long(1175658490), matchs[2].getAttrValues().get(0));
+		assertEquals(new Long(1), matchs[2].getAttrValues().get(1));
 		
 
 		SphinxWordInfo sphinxWordInfo = result.words[0];
-		assertEquals("wifi", sphinxWordInfo.word);
-		assertEquals(6, sphinxWordInfo.hits);
-		assertEquals(3, sphinxWordInfo.docs);
+		assertEquals("wifi", sphinxWordInfo.getWord());
+		assertEquals(6, sphinxWordInfo.getHits());
+		assertEquals(3, sphinxWordInfo.getDocs());
 	}
 	
 	public void testResponseQueryWrongWay() {
@@ -128,16 +128,16 @@ public class SphinxClientTest extends TestCase {
 		assertEquals(3, results[0].totalFound);
 		assertEquals(3, results[0].matches.length);
 		SphinxWordInfo sphinxWordInfo = results[0].words[0];
-		assertEquals("wifi", sphinxWordInfo.word);
-		assertEquals(6, sphinxWordInfo.hits);
-		assertEquals(3, sphinxWordInfo.docs);
+		assertEquals("wifi", sphinxWordInfo.getWord());
+		assertEquals(6, sphinxWordInfo.getHits());
+		assertEquals(3, sphinxWordInfo.getDocs());
 
 		assertEquals(0, results[1].totalFound);
 		assertEquals(0, results[1].matches.length);
 		sphinxWordInfo = results[1].words[0];
-		assertEquals("thisstringyouwillneverfound", sphinxWordInfo.word);
-		assertEquals(0, sphinxWordInfo.hits);
-		assertEquals(0, sphinxWordInfo.docs);
+		assertEquals("thisstringyouwillneverfound", sphinxWordInfo.getWord());
+		assertEquals(0, sphinxWordInfo.getHits());
+		assertEquals(0, sphinxWordInfo.getDocs());
 
 	}
 	
@@ -164,8 +164,8 @@ public class SphinxClientTest extends TestCase {
 		
 		SphinxResult result = sphinxClient.query("wifi", "test1");
 		SphinxMatch[] matchs = result.matches;
-		assertEquals(2, matchs[0].docId);
-		assertEquals(new Long(1), matchs[0].attrValues.get(1));
+		assertEquals(2, matchs[0].getDocId());
+		assertEquals(new Long(1), matchs[0].getAttrValues().get(1));
 
 		values[0][1] = 2;
 		updated = sphinxClient.updateAttributes("test1", attrs, values);
@@ -173,8 +173,8 @@ public class SphinxClientTest extends TestCase {
 		
 		result = sphinxClient.query("wifi", "test1");
 		matchs = result.matches;
-		assertEquals(2, matchs[0].docId);
-		assertEquals(new Long(2), matchs[0].attrValues.get(1));
+		assertEquals(2, matchs[0].getDocId());
+		assertEquals(new Long(2), matchs[0].getAttrValues().get(1));
 
 	}
 

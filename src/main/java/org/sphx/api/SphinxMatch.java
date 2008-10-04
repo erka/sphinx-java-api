@@ -7,21 +7,54 @@ import java.util.ArrayList;
  */
 public class SphinxMatch {
 	/** Matched document ID. */
-	public long docId;
+	private long docId;
 
 	/** Matched document weight. */
-	public int weight;
+	private int weight;
 
 	/** Matched document attribute values. */
-	public ArrayList attrValues;
+	private ArrayList attrValues;
 
 	/** Trivial constructor.
-	 * @param docId id of document.
-	 * @param weight weight. 
+	 * @param curDocId id of document.
+	 * @param curWeight weight.
 	 */
-	public SphinxMatch(final long docId, final int weight) {
-		this.docId = docId;
-		this.weight = weight;
+	public SphinxMatch(final long curDocId, final int curWeight) {
+		this.docId = curDocId;
+		this.weight = curWeight;
 		this.attrValues = new ArrayList();
+	}
+
+	/**
+	 * Matched document ID.
+	 * @return the docId
+	 */
+	public final long getDocId() {
+		return docId;
+	}
+
+	/**
+	 * Matched document weight.
+	 * @return the weight
+	 */
+	public final int getWeight() {
+		return weight;
+	}
+
+	/**
+	 * Matched document attribute values.
+	 * @return the attrValues
+	 */
+	public final ArrayList getAttrValues() {
+		return attrValues;
+	}
+
+	/**
+	 * Add attribute to collection.
+	 * @param idx attribute index.
+	 * @param obj attribute value.
+	 */
+	final void addAttribute(final int idx, final Object obj) {
+		attrValues.add(idx, obj);
 	}
 }
