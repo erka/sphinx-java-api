@@ -1028,7 +1028,7 @@ public class SphinxClient {
 			writeNetUTF8 ( req, index );
 			req.writeInt ( hits ? 1 : 0 );
 
-		} catch (Exception e) {
+		} catch (IOException e) {
 			throw new SphinxException("internal error: failed to build request: " + e);
 		}
 
@@ -1051,7 +1051,7 @@ public class SphinxClient {
 			}
 			return res;
 
-		} catch ( Exception e ) {
+		} catch ( IOException e ) {
 			throw new SphinxException("incomplete reply");
 		}
 	}
