@@ -1,5 +1,5 @@
 /*
- * $Id: SphinxClient.java 1253 2008-04-26 08:54:27Z shodan $
+ * SphinxClient.java 
  *
  * Java version of Sphinx searchd client (Java API)
  *
@@ -99,7 +99,7 @@ public class SphinxClient {
 	/* filter types */
 	private final static int SPH_FILTER_VALUES		= 0;
 	private final static int SPH_FILTER_RANGE		= 1;
-	private final static int SPH_FILTER_FLOATRANGE	= 2;
+	// TODO FIXME private final static int SPH_FILTER_FLOATRANGE	= 2;
 
 
 	private String		_host;
@@ -186,19 +186,19 @@ public class SphinxClient {
 	}
 
 	/** Get last error message, if any. */
-	public String GetLastError()
+	public String getLastError()
 	{
 		return _error;
 	}
 
 	/** Get last warning message, if any. */
-	public String GetLastWarning()
+	public String getLastWarning()
 	{
 		return _warning;
 	}
 
 	/** Set searchd host and port to connect to. */
-	public void SetServer(String host, int port) throws SphinxException
+	public void setServer(String host, int port) throws SphinxException
 	{
 		myAssert ( host!=null && host.length()>0, "host name must not be empty" );
 		myAssert ( port>0 && port<65536, "port must be in 1..65535 range" );
@@ -386,7 +386,7 @@ public class SphinxClient {
 	}
 
 	/** Set matches offset and limit to return to client, max matches to retrieve on server, and cutoff. */
-	public void SetLimits ( int offset, int limit, int max, int cutoff ) throws SphinxException
+	public void setLimits ( int offset, int limit, int max, int cutoff ) throws SphinxException
 	{
 		myAssert ( offset>=0, "offset must not be negative" );
 		myAssert ( limit>0, "limit must be positive" );
@@ -400,26 +400,26 @@ public class SphinxClient {
 	}
 
 	/** Set matches offset and limit to return to client, and max matches to retrieve on server. */
-	public void SetLimits ( int offset, int limit, int max ) throws SphinxException
+	public void setLimits ( int offset, int limit, int max ) throws SphinxException
 	{
-		SetLimits ( offset, limit, max, _cutoff );
+		setLimits ( offset, limit, max, _cutoff );
 	}
 
 	/** Set matches offset and limit to return to client. */
-	public void SetLimits ( int offset, int limit) throws SphinxException
+	public void setLimits ( int offset, int limit) throws SphinxException
 	{
-		SetLimits ( offset, limit, _maxMatches, _cutoff );
+		setLimits ( offset, limit, _maxMatches, _cutoff );
 	}
 
 	/** Set maximum query time, in milliseconds, per-index, 0 means "do not limit". */
-	public void SetMaxQueryTime ( int maxTime ) throws SphinxException
+	public void setMaxQueryTime ( int maxTime ) throws SphinxException
 	{
 		myAssert ( maxTime>=0, "max_query_time must not be negative" );
 		_maxQueryTime = maxTime;
 	}
 
 	/** Set matching mode. */
-	public void SetMatchMode(int mode) throws SphinxException
+	public void setMatchMode(int mode) throws SphinxException
 	{
 		myAssert (
 			mode==SPH_MATCH_ALL ||
@@ -432,7 +432,7 @@ public class SphinxClient {
 	}
 
 	/** Set ranking mode. */
-	public void SetRankingMode ( int ranker ) throws SphinxException
+	public void setRankingMode ( int ranker ) throws SphinxException
 	{
 		myAssert ( ranker==SPH_RANK_PROXIMITY_BM25
 			|| ranker==SPH_RANK_BM25
@@ -442,7 +442,7 @@ public class SphinxClient {
 	}
 
 	/** Set sorting mode. */
-	public void SetSortMode ( int mode, String sortby ) throws SphinxException
+	public void setSortMode ( int mode, String sortby ) throws SphinxException
 	{
 		myAssert (
 			mode==SPH_SORT_RELEVANCE ||
@@ -457,21 +457,31 @@ public class SphinxClient {
 	}
 
 	/** Set per-field weights (all values must be positive). WARNING: DEPRECATED, use SetFieldWeights() instead. */
-	public void SetWeights(int[] weights) throws SphinxException
-	{
+	public void setWeights(int[] weights) throws SphinxException {
 		myAssert ( weights!=null, "weights must not be null" );
 		for (int i = 0; i < weights.length; i++) {
 			int weight = weights[i];
 			myAssert ( weight>0, "all weights must be greater than 0" );
 		}
-		_weights = weights;
+		_weights = new int[weights.length];
+		System.arraycopy(weights, 0, _weights, 0, weights.length);
 	}
 
+	/**
+	 * Get per-field weights.
+	 * @return array of values.
+	 */
+	public int[] getWeights() {
+		int[] weights = new int[_weights.length];
+		System.arraycopy(_weights, 0, weights, 0, _weights.length);
+		return weights;
+	}
+	
 	/**
 	 * Bind per-field weights by field name.
 	 * @param fieldWeights hash which maps String index names to Integer weights
 	 */
-	public void SetFieldeights ( Map fieldWeights ) throws SphinxException
+	public void setFieldeights ( Map fieldWeights ) throws SphinxException
 	{
 		/* FIXME! implement checks here */
 		_fieldWeights = ( fieldWeights==null ) ? new LinkedHashMap () : fieldWeights;
@@ -481,14 +491,14 @@ public class SphinxClient {
 	 * Bind per-index weights by index name (and enable summing the weights on duplicate matches, instead of replacing them).
 	 * @param indexWeights hash which maps String index names to Integer weights
 	 */
-	public void SetIndexWeights ( Map indexWeights ) throws SphinxException
+	public void setIndexWeights ( Map indexWeights ) throws SphinxException
 	{
 		/* FIXME! implement checks here */
 		_indexWeights = ( indexWeights==null ) ? new LinkedHashMap () : indexWeights;
 	}
 
 	/** Set document IDs range to match. */
-	public void SetIDRange ( int min, int max ) throws SphinxException
+	public void setIDRange ( int min, int max ) throws SphinxException
 	{
 		myAssert ( min<=max, "min must be less or equal to max" );
 		_minId = min;
@@ -496,7 +506,7 @@ public class SphinxClient {
 	}
 
 	/** Set values filter. Only match records where attribute value is in given set. */
-	public void SetFilter ( String attribute, int[] values, boolean exclude ) throws SphinxException
+	public void setFilter ( String attribute, int[] values, boolean exclude ) throws SphinxException
 	{
 		myAssert ( values!=null && values.length>0, "values array must not be null or empty" );
 		myAssert ( attribute!=null && attribute.length()>0, "attribute name must not be null or empty" );
@@ -517,15 +527,15 @@ public class SphinxClient {
 		_filterCount++;
 	}
 
-	/** Set values filter with a single value (syntax sugar; see {@link #SetFilter(String,int[],boolean)}). */
-	public void SetFilter ( String attribute, int value, boolean exclude ) throws SphinxException
+	/** Set values filter with a single value (syntax sugar; see {@link #setFilter(String,int[],boolean)}). */
+	public void setFilter ( String attribute, int value, boolean exclude ) throws SphinxException
 	{
 		int[] values = new int[] { value };
-		SetFilter ( attribute, values, exclude );
+		setFilter ( attribute, values, exclude );
 	}
 
 	/** Set integer range filter.  Only match records if attribute value is beetwen min and max (inclusive). */
-	public void SetFilterRange ( String attribute, int min, int max, boolean exclude ) throws SphinxException
+	public void setFilterRange ( String attribute, int min, int max, boolean exclude ) throws SphinxException
 	{
 		myAssert ( min<=max, "min must be less or equal to max" );
 		try
@@ -536,34 +546,32 @@ public class SphinxClient {
 			_filters.writeInt ( max );
 			_filters.writeInt ( exclude ? 1 : 0 );
 
-		} catch ( Exception e )
-		{
-			myAssert ( false, "IOException: " + e.getMessage() );
+		} catch ( Exception e ) {
+			myAssert ( false, "IOException: " + e.getMessage());
 		}
 		_filterCount++;
 	}
 
 	/** Set float range filter.  Only match records if attribute value is beetwen min and max (inclusive). */
-	public void SetFilterFloatRange ( String attribute, float min, float max, boolean exclude ) throws SphinxException
-	{
+	public void setFilterFloatRange ( String attribute, float min, float max, boolean exclude ) 
+		throws SphinxException {
+		
 		myAssert ( min<=max, "min must be less or equal to max" );
-		try
-		{
-			writeNetUTF8 ( _filters, attribute );
-			_filters.writeInt ( SPH_FILTER_RANGE );
-			_filters.writeFloat ( min );
-			_filters.writeFloat ( max );
-			_filters.writeInt ( exclude ? 1 : 0 );
-		} catch ( Exception e )
-		{
+		try {
+			writeNetUTF8(_filters, attribute);
+			_filters.writeInt(SPH_FILTER_RANGE);
+			_filters.writeFloat(min);
+			_filters.writeFloat(max);
+			_filters.writeInt(exclude ? 1 : 0);
+		} catch (Exception e) {
 			myAssert ( false, "IOException: " + e.getMessage() );
 		}
 		_filterCount++;
 	}
 
 	/** Setup geographical anchor point. Required to use @geodist in filters and sorting; distance will be computed to this point. */
-	public void SetGeoAnchor ( String latitudeAttr, String longitudeAttr, float latitude, float longitude ) throws SphinxException
-	{
+	public void setGeoAnchor(String latitudeAttr, String longitudeAttr, float latitude, float longitude) 
+		throws SphinxException {
 		myAssert ( latitudeAttr!=null && latitudeAttr.length()>0, "longitudeAttr string must not be null or empty" );
 		myAssert ( longitudeAttr!=null && longitudeAttr.length()>0, "longitudeAttr string must not be null or empty" );
 
@@ -574,8 +582,7 @@ public class SphinxClient {
 	}
 
 	/** Set grouping attribute and function. */
-	public void SetGroupBy ( String attribute, int func, String groupsort ) throws SphinxException
-	{
+	public void setGroupBy(String attribute, int func, String groupsort) throws SphinxException {
 		myAssert (
 			func==SPH_GROUPBY_DAY ||
 			func==SPH_GROUPBY_WEEK ||
@@ -590,20 +597,17 @@ public class SphinxClient {
 	}
 
 	/** Set grouping attribute and function with default ("@group desc") groupsort (syntax sugar). */
-	public void SetGroupBy(String attribute, int func) throws SphinxException
-	{
-		SetGroupBy(attribute, func, "@group desc");
+	public void setGroupBy(String attribute, int func) throws SphinxException {
+		setGroupBy(attribute, func, "@group desc");
 	}
 
 	/** Set count-distinct attribute for group-by queries. */
-	public void SetGroupDistinct(String attribute)
-	{
+	public void setGroupDistinct(String attribute) {
 		_groupDistinct = attribute;
 	}
 
 	/** Set distributed retries count and delay. */
-	public void SetRetries ( int count, int delay ) throws SphinxException
-	{
+	public void setRetries(int count, int delay) throws SphinxException {
 		myAssert ( count>=0, "count must not be negative" );
 		myAssert ( delay>=0, "delay must not be negative" );
 		_retrycount = count;
@@ -611,13 +615,12 @@ public class SphinxClient {
 	}
 
 	/** Set distributed retries count with default (zero) delay (syntax sugar). */
-	public void SetRetries ( int count ) throws SphinxException
-	{
-		SetRetries ( count, 0 );
+	public void setRetries(int count) throws SphinxException {
+		setRetries (count, 0);
 	}
 
 	/** Reset all currently set filters (for multi-queries). */
-	public void ResetFilters()
+	public void resetFilters()
 	{
 		/* should we close them first? */
 		_rawFilters = new ByteArrayOutputStream();
@@ -632,24 +635,24 @@ public class SphinxClient {
 	}
 
 	/** Connect to searchd server and run current search query against all indexes (syntax sugar). */
-	public SphinxResult Query ( String query ) throws SphinxException
+	public SphinxResult query ( String query ) throws SphinxException
 	{
-		return Query ( query, "*", "" );
+		return query ( query, "*", "" );
 	}
 
 	/** Connect to searchd server and run current search query against all indexes (syntax sugar). */
-	public SphinxResult Query ( String query, String index ) throws SphinxException
+	public SphinxResult query ( String query, String index ) throws SphinxException
 	{
-		return Query ( query, index, "" );
+		return query ( query, index, "" );
 	}
 
 	/** Connect to searchd server and run current search query. */
-	public SphinxResult Query ( String query, String index, String comment ) throws SphinxException
+	public SphinxResult query ( String query, String index, String comment ) throws SphinxException
 	{
 		myAssert ( _reqs==null || _reqs.size()==0, "AddQuery() and Query() can not be combined; use RunQueries() instead" );
 
-		AddQuery ( query, index, comment );
-		SphinxResult[] results = RunQueries();
+		addQuery ( query, index, comment );
+		SphinxResult[] results = runQueries();
 		SphinxResult res = results[0];
 		_warning = res.warning;
 		_error = res.error;
@@ -657,7 +660,7 @@ public class SphinxClient {
 	}
 
 	/** Add new query with current settings to current search request. */
-	public int AddQuery ( String query, String index, String comment ) throws SphinxException
+	public int addQuery ( String query, String index, String comment ) throws SphinxException
 	{
 		ByteArrayOutputStream req = new ByteArrayOutputStream();
 
@@ -743,18 +746,13 @@ public class SphinxClient {
 			_reqs.add ( qIndex, req.toByteArray() );
 			return qIndex;
 
-		} catch ( Exception e )
-		{
+		} catch (IOException e){
 			myAssert ( false, "error in AddQuery(): " + e + ": " + e.getMessage() );
-
-		} finally
-		{
-			try
-			{
+		} finally {
+			try {
 				_filters.close ();
 				_rawFilters.close ();
-			} catch ( IOException e )
-			{
+			} catch(IOException e) {
 				myAssert ( false, "error in AddQuery(): " + e + ": " + e.getMessage() );
 			}
 		}
@@ -762,7 +760,7 @@ public class SphinxClient {
 	}
 
 	/** Run all previously added search queries. */
-	public SphinxResult[] RunQueries() throws SphinxException {
+	public SphinxResult[] runQueries() throws SphinxException {
 		
 		myAssert( _reqs!=null && !_reqs.isEmpty(), "no queries defined, issue AddQuery() first");
 
@@ -805,7 +803,7 @@ public class SphinxClient {
 				/* read fields */
 				int nfields = in.readInt();
 				res.fields = new String[nfields];
-				int pos = 0;
+				// TODO FIXME: int pos = 0;
 				for (int i = 0; i < nfields; i++)
 					res.fields[i] = readNetUTF8(in);
 
@@ -834,7 +832,7 @@ public class SphinxClient {
 					/* read matches */
 					for (int attrNumber = 0; attrNumber < res.attrTypes.length; attrNumber++)
 					{
-						String attrName = res.attrNames[attrNumber];
+						//TODO FIXME: String attrName = res.attrNames[attrNumber];
 						int type = res.attrTypes[attrNumber];
 
 						/* handle floats */
@@ -882,7 +880,7 @@ public class SphinxClient {
 	 * @param opts maps String keys to String or Integer values (see the documentation for complete keys list).
 	 * @return null on failure, array of snippets on success.
 	 */
-	public String[] BuildExcerpts ( String[] docs, String index, String words, Map opts ) throws SphinxException
+	public String[] buildExcerpts ( String[] docs, String index, String words, Map opts ) throws SphinxException
 	{
 		myAssert(docs != null && docs.length > 0, "BuildExcerpts: Have no documents to process");
 		myAssert(index != null && index.length() > 0, "BuildExcerpts: Have no index to process documents");
@@ -940,7 +938,7 @@ public class SphinxClient {
 			}
 			return res;
 
-		} catch ( Exception e ) {
+		} catch(IOException e) {
 			throw new SphinxException("incomplete reply");
 		}
 	}
@@ -969,7 +967,7 @@ public class SphinxClient {
 	 *
 	 * @throws			SphinxException on invalid parameters
 	 */
-	public int UpdateAttributes ( String index, String[] attrs, long[][] values ) throws SphinxException
+	public int updateAttributes ( String index, String[] attrs, long[][] values ) throws SphinxException
 	{
 		/* check args */
 		myAssert ( index!=null && index.length()>0, "no index name provided" );
@@ -1020,7 +1018,7 @@ public class SphinxClient {
      * Connect to searchd server, and generate keyword list for a given query.
      * Returns null on failure, an array of Maps with misc per-keyword info on success.
      */
-	public Map[] BuildKeywords ( String query, String index, boolean hits ) throws SphinxException
+	public Map[] buildKeywords ( String query, String index, boolean hits ) throws SphinxException
 	{
 		/* build request */
 		ByteArrayOutputStream reqBuf = new ByteArrayOutputStream();
@@ -1058,7 +1056,3 @@ public class SphinxClient {
 		}
 	}
 }
-
-/*
- * $Id: SphinxClient.java 1253 2008-04-26 08:54:27Z shodan $
- */
