@@ -17,15 +17,47 @@
   </dependencies>
   
   <build>
-  		<plugins>
-  			<plugin>
-	        	<artifactId>maven-compiler-plugin</artifactId>
-    			<configuration>
-      				<source>1.4</source>
-      				<target>1.4</target>
-		        </configuration>
-      		</plugin>
-  		</plugins>
+	<plugins>
+		<plugin>
+			<artifactId>maven-compiler-plugin</artifactId>
+			<configuration>
+					<source>1.4</source>
+					<target>1.4</target>
+		    </configuration>
+		</plugin>
+		<plugin>
+			<groupId>org.codehaus.mojo</groupId>
+			<artifactId>findbugs-maven-plugin</artifactId>
+			<version>1.2</version>
+			<executions>
+			    <execution>
+			        <id>findbugs</id>
+			        <phase>test</phase>
+			        <!--goals>
+			            <goal>check</goal>
+			        </goals -->
+			    </execution>
+			</executions>
+		</plugin>
+		<plugin>
+	        <groupId>org.apache.maven.plugins</groupId>
+	        <artifactId>maven-checkstyle-plugin</artifactId>
+			<executions>
+			    <execution>
+			        <id>checkstyle</id>
+			        <phase>test</phase>
+			        <!-- goals>
+			            <goal>check</goal>
+			        </goals -->
+			    </execution>
+			</executions>
+	        <configuration>
+	          <enableRulesSummary>false</enableRulesSummary>
+		      <configLocation>checkstyle.xml</configLocation>
+	        </configuration>
+	    </plugin>
+		
+	</plugins>
   </build>
   
   	 <reporting>
@@ -46,6 +78,10 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
+			      <configuration>
+			          <configLocation>checkstyle.xml</configLocation>
+			      </configuration>
+				
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
