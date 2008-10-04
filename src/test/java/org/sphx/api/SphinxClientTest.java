@@ -62,7 +62,9 @@ public class SphinxClientTest extends TestCase {
 	public void testResponseQueryWithNonExistWord() throws SphinxException {
 		SphinxResult result = sphinxClient.query("wifi" + System.currentTimeMillis(), "test1");
 		assertNotNull(result);
-		assertEquals(0, result.totalFound);	
+		assertEquals(0, result.totalFound);
+		assertEquals(0, result.getStatus());	
+
 	}
   	
   	

@@ -258,6 +258,7 @@ public class SphinxClient {
 			try {
 				c.close();
 			} catch (IOException e) {
+				// do nothing here.
 			}
 		}
 	}
@@ -381,6 +382,7 @@ public class SphinxClient {
 			try {
 				sock.close();
 			} catch (IOException e) {
+				//do nothing here.
 			}
 		}
 	}

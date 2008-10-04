@@ -1,29 +1,21 @@
-/*
- * $Id: SphinxException.java 1172 2008-02-24 13:50:48Z shodan $
- */
-
 package org.sphx.api;
 
-/** Exception thrown on attempts to pass invalid arguments to Sphinx API methods. */
-public class SphinxException extends Exception
-{
+/** Exception thrown on attempts to pass invalid
+ *  arguments to Sphinx API methods. */
+public class SphinxException extends Exception {
 	/**
-	 * 
+	 * serial Version UID.
 	 */
 	private static final long serialVersionUID = 1L;
 
 	/** Trivial constructor. */
-	public SphinxException()
-	{
+	public SphinxException() {
 	}
 
-	/** Constructor from error message string. */
-	public SphinxException ( String message )
-	{
-		super ( message );
+	/** Constructor from error message string.
+	 * @param message message about error.
+	 */
+	public SphinxException(final String message) {
+		super(message);
 	}
 }
-
-/*
- * $Id: SphinxException.java 1172 2008-02-24 13:50:48Z shodan $
- */
