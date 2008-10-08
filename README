@@ -1,0 +1,41 @@
+It's alternative of Sphinx searchd client (java API).
+
+Original version could be found at http://www.sphinxsearch.com/
+
+
+This version has full compatibility with jdk 1.4.
+
+Maven 2 is used as build tool. Please visit http://maven.apache.org/ to get more information about maven.
+Quick command:
+
+Clean 
+$ mvn clean
+
+Run tests
+$ mvn test
+
+Test needs searchd service with "test1" index. Checkout src/test/resources/sphinx_test.sql  and  src/test/resources/sphinx/sphinx.conf files to build index.
+
+
+Compile java files
+$ mvn compile
+
+Build jar 
+$ mvn clean package
+
+Build jar and skip test phase
+$ mvn -Dmaven.test.skip=true clean package
+
+
+
+Generate reports (findbugs, PMD, PCD, javadoc, code coverage, test report, checkstyle). 
+$ mvn clean site
+
+Report could be found at target/site/. Open project-reports.html
+
+
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License. You should have
+received a copy of the GPL license along with this program; if you
+did not, you can find it at http://www.gnu.org/
