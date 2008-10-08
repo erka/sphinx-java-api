@@ -584,7 +584,6 @@ public class SphinxClientTest extends TestCase {
 			data.write(bs);
 			
 			DataInputStream res = sphinxClient.executeCommand( SphinxClient.SEARCHD_COMMAND_UPDATE, SphinxClient.VER_COMMAND_UPDATE, data);
-			System.out.println(sphinxClient.getLastError());
 			byte[] response = new byte[3];
 			res.readFully(response);
 			assertEquals(new byte[]{2,5,12}, response);
