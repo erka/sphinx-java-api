@@ -43,9 +43,11 @@ Maven 2 is used as build tool. Please visit http://maven.apache.org to get more 
 ===== Generate reports (findbugs, PMD, PCD, javadoc, code coverage, test report, checkstyle). 
   mvn clean site
 
-Report could be found at target/site/. Open project-reports.html
+Report could be found at <tt>target/site/project-reports.html</tt>.
 
 
 == Support
 
-Roman Dmytrenko <erka@kpumuk.info> http://erka.kpumuk.info
+* Roman Dmytrenko <erka@kpumuk.info> http://erka.kpumuk.info
+* Andrew Aksyonoff http://www.sphinxsearch.com/contacts.html
+* Vladimir Fedorkov http://www.sphinxsearch.com/contacts.html
