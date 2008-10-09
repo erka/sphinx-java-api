@@ -19,7 +19,7 @@ This version has full compatibility with jdk 1.4.
 
 == Requirements
 
-Tests need searchd service with "test1" index. Checkout src/test/resources/sphinx_test.sql  and  src/test/resources/sphinx/sphinx.conf files to build index.
+Tests need searchd service with "test1" index. Checkout +src/test/resources/sphinx_test.sql+  and  +src/test/resources/sphinx/sphinx.conf+ files to build index.
 
 == Building
 
