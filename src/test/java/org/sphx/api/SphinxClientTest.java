@@ -49,8 +49,19 @@ public class SphinxClientTest extends TestCase {
 				fail("array don't equals");
 			}
 		}
+  	}
+  	
+  	static public void assertEquals(long[] expected, long[] actual) {
+		if (expected.length != actual.length){
+			fail("array don't equals");
+		}
+		for (int i = 0; i < expected.length; i++) {
+			if (expected[i] != actual[i]) {
+				fail("array don't equals");
+			}
+		}
 	}
-
+  	
   	public void testEqualsIntsArray() throws Exception {
   		assertEquals(new int[]{-11, 22, 0xFFFF}, new int[]{-11, 22, 0xFFFF});
   	}
@@ -175,8 +186,37 @@ public class SphinxClientTest extends TestCase {
 		matchs = result.matches;
 		assertEquals(2, matchs[0].getDocId());
 		assertEquals(new Long(2), matchs[0].getAttrValues().get(1));
+	}
+	
+	
+	public void testMVAUpdateAttributes() throws SphinxException {
+		long[] mvaOriginal = {5, 6, 7, 8};
+		long[] mvaForUpdate = {11, 21};
+
+		String[] attrs = {"tags"};
+		long[][] values = {{2, 11, 21}};
+		
+		int updated = sphinxClient.updateAttributes("test1", attrs, values, true);
+		assertEquals(1, updated);
+
+		SphinxResult result = sphinxClient.query("wifi", "test1");
+		SphinxMatch[] matchs = result.matches;
+		assertEquals(2, matchs[0].getDocId());
+		long[] newMva = (long[]) matchs[0].getAttrValues().get(3);
+		assertEquals(mvaForUpdate, newMva);
+
+		values[0] = new long[] {2, 5, 6, 7, 8};
+		updated = sphinxClient.updateAttributes("test1", attrs, values, true);
+		assertEquals(1, updated);
+		
+		result = sphinxClient.query("wifi", "test1");
+		matchs = result.matches;
+		assertEquals(2, matchs[0].getDocId());
+		newMva = (long[]) matchs[0].getAttrValues().get(3);
+		assertEquals(mvaOriginal, newMva);
 
 	}
+
 
 	public void testUpdateAttributesWithNullAttribute() {
 		String[] attrs = {null};

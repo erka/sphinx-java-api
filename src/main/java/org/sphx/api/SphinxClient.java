@@ -1298,6 +1298,29 @@ public class SphinxClient {
 
 	/**
 	 * Connect to searchd server and update given attributes on given documents
+	 * in given indexes.
+	 * 
+	 * @param index
+	 *            index name(s) to update; might be distributed
+	 * @param attrs
+	 *            array with the names of the attributes to update
+	 * @param values
+	 *            array of updates; each long[] entry must contains document ID
+	 *            in the first element, and all new attribute values in the
+	 *            following ones
+	 * @return -1 on failure, amount of actually found and updated documents
+	 *         (might be 0) on success
+	 *
+	 * @throws SphinxException
+	 *             on invalid parameters
+	 */
+	public int updateAttributes(final String index, final String[] attrs,
+			final long[][] values) throws SphinxException {
+		return updateAttributes(index, attrs, values, false);
+	}	
+	
+	/**
+	 * Connect to searchd server and update given attributes on given documents
 	 * in given indexes. Sample code that will set group_id=123 where id=1 and
 	 * group_id=456 where id=3:
 	 *
@@ -1322,6 +1345,8 @@ public class SphinxClient {
 	 *            array of updates; each long[] entry must contains document ID
 	 *            in the first element, and all new attribute values in the
 	 *            following ones
+	 * @param mva 
+	 * 			 if true value is multi-array value otherwise false
 	 * @return -1 on failure, amount of actually found and updated documents
 	 *         (might be 0) on success
 	 *
@@ -1329,7 +1354,7 @@ public class SphinxClient {
 	 *             on invalid parameters
 	 */
 	public int updateAttributes(final String index, final String[] attrs,
-			final long[][] values) throws SphinxException {
+			final long[][] values, final boolean mva) throws SphinxException {
 		/* check args */
 		check(index != null && index.length() > 0, "no index name provided");
 		check(attrs != null && attrs.length > 0,
@@ -1339,8 +1364,13 @@ public class SphinxClient {
 
 		for (int i = 0; i < values.length; i++) {
 			check(values[i] != null, "update entry #" + i + " is null");
-			check(values[i].length == 1 + attrs.length, "update entry #" + i
+			if (mva) {
+				check(values[i].length >= 1 + attrs.length, "update entry #" + i
+						+ " has wrong length");
+			} else {
+				check(values[i].length == 1 + attrs.length, "update entry #" + i
 					+ " has wrong length");
+			}
 		}
 
 		/* build and send request */
@@ -1354,19 +1384,24 @@ public class SphinxClient {
 			for (int i = 0; i < attrs.length; i++) {
 				writeNetUTF8(req, attrs[i]);
 				// mva? mutli variables array
-				req.writeInt(0);
+				if (mva) {
+					req.writeInt(1);
+				} else {
+					req.writeInt(0);
+				}
 			}
 
 			req.writeInt(values.length);
 			for (int i = 0; i < values.length; i++) {
 				/* send docid as 64bit value */
 				req.writeLong(values[i][0]);
-				for (int j = 1; j < values[i].length; j++) {
-					/*
-					 * send values as 32bit values; FIXME! what happens when
-					 * they are over 2^31?
-					 */
-					req.writeInt((int) values[i][j]);
+				if (mva) {
+					req.writeInt(values[i].length - 1);
+					for (int j = 1; j < values[i].length; j++) {
+						req.writeInt((int) values[i][j]);
+					}
+				} else {
+					req.writeInt((int) values[i][1]);
 				}
 			}
 
