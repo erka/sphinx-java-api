@@ -205,10 +205,20 @@ public class SphinxClientTest extends TestCase {
 		long[] newMva = (long[]) matchs[0].getAttrValues().get(3);
 		assertEquals(mvaForUpdate, newMva);
 
+		values[0] = new long[] {2};
+		updated = sphinxClient.updateAttributes("test1", attrs, values, true);
+		assertEquals(1, updated);
+
+		result = sphinxClient.query("wifi", "test1");
+		matchs = result.matches;
+		assertEquals(2, matchs[0].getDocId());
+		newMva = (long[]) matchs[0].getAttrValues().get(3);
+		assertEquals(new long[0], newMva);
+		
 		values[0] = new long[] {2, 5, 6, 7, 8};
 		updated = sphinxClient.updateAttributes("test1", attrs, values, true);
 		assertEquals(1, updated);
-		
+
 		result = sphinxClient.query("wifi", "test1");
 		matchs = result.matches;
 		assertEquals(2, matchs[0].getDocId());

@@ -1365,7 +1365,7 @@ public class SphinxClient {
 		for (int i = 0; i < values.length; i++) {
 			check(values[i] != null, "update entry #" + i + " is null");
 			if (mva) {
-				check(values[i].length >= 1 + attrs.length, "update entry #" + i
+				check(values[i].length >= 1, "update entry #" + i
 						+ " has wrong length");
 			} else {
 				check(values[i].length == 1 + attrs.length, "update entry #" + i
