@@ -588,7 +588,7 @@ public class SphinxClientTest extends TestCase {
 			res.readFully(response);
 			assertEquals(new byte[]{2,5,12}, response);
 			
-			byte[] expectedBytes = {0, 0, 0, 1, 0, 2, 01, 01, 0, 0, 0, 12, 0,2,3,4,5,3,2,3,4,4,3,3};
+			byte[] expectedBytes = {0, 0, 0, 1, 0, 2, 01, 02, 0, 0, 0, 12, 0,2,3,4,5,3,2,3,4,4,3,3};
 			assertEquals(expectedBytes, out.toByteArray());
 			assertTrue(socket.isClosed());
 		}

@@ -39,12 +39,14 @@ public class SphinxClient {
 	private static final int EXCEPTS_USE_BOUNDARIES_FLAG = 8;
 	private static final int EXCEPTS_SINGLE_PASSAGE_FLAG = 4;
 	private static final int EXCEPTS_EXACT_PHASE_FLAG = 2;
+	
 	private static final Integer DEFAULT_EXCEPTS_AROUND = new Integer(5);
 	private static final Integer DEFAULT_EXCEPTS_LIMIT = new Integer(256);
 	private static final float MILLSEC_IN_SEC = 1000.0f;
 	private static final int DEFAULT_LIMIT = 20;
 	private static final int DEFAULT_SEARCHD_PORT = 3312;
 	public static final long MAX_DWORD = 4294967296L; /*2 ^ 32*/
+	
 	/* matching modes */
 	public static final int SPH_MATCH_ALL			= 0;
 	public static final int SPH_MATCH_ANY			= 1;
@@ -59,6 +61,7 @@ public class SphinxClient {
 	public static final int SPH_RANK_BM25			= 1;
 	public static final int SPH_RANK_NONE			= 2;
 	public static final int SPH_RANK_WORDCOUNT		= 3;
+	public static final int SPH_RANK_PROXIMITY		= 4;
 
 	/* sorting modes */
 	public static final int SPH_SORT_RELEVANCE		= 0;
@@ -88,20 +91,22 @@ public class SphinxClient {
 	public static final int SPH_ATTR_ORDINAL		= 3;
 	public static final int SPH_ATTR_BOOL			= 4;
 	public static final int SPH_ATTR_FLOAT			= 5;
+	public static final int SPH_ATTR_BIGINT			= 6;
 	public static final int SPH_ATTR_MULTI			= 0x40000000;
 
 
 	/* searchd commands */
 	public static final int SEARCHD_COMMAND_SEARCH		= 0;
-	public static final int SEARCHD_COMMAND_EXCERPT	= 1;
+	public static final int SEARCHD_COMMAND_EXCERPT		= 1;
 	public static final int SEARCHD_COMMAND_UPDATE		= 2;
 	public static final int SEARCHD_COMMAND_KEYWORDS	= 3;
+	public static final int SEARCHD_COMMAND_PERSIST		= 4;
 
 	/* searchd command versions */
-	public static final int VER_MAJOR_PROTO = 0x1;
-	public static final int VER_COMMAND_SEARCH		= 0x113;
-	public static final int VER_COMMAND_EXCERPT	= 0x100;
-	public static final int VER_COMMAND_UPDATE		= 0x101;
+	public static final int VER_MAJOR_PROTO			= 0x1;
+	public static final int VER_COMMAND_SEARCH		= 0x116;
+	public static final int VER_COMMAND_EXCERPT		= 0x100;
+	public static final int VER_COMMAND_UPDATE		= 0x102;
 	public static final int VER_COMMAND_KEYWORDS	= 0x100;
 
 	/* filter types */
@@ -141,7 +146,9 @@ public class SphinxClient {
 	private int			rankingMode;
 	private int			maxQueryTime;
 	private Map			fieldWeights;
-
+	private ArrayList	overrides;
+	private String 		select;
+	
 	/** Sphinx client timeout. */
 	public static final int SPH_CLIENT_TIMEOUT_MILLISEC	= 30000;
 	private static final int DEFAULT_MAX_MATCHES = 1000;
@@ -193,12 +200,13 @@ public class SphinxClient {
 
 		error = "";
 		warning = "";
-
 		reqs = new ArrayList();
 		weights = null;
 		indexWeights = new LinkedHashMap();
 		fieldWeights = new LinkedHashMap();
 		rankingMode = SPH_RANK_PROXIMITY_BM25;
+		overrides = new ArrayList();
+		select = "*";
 	}
 
 	/** 
@@ -691,7 +699,7 @@ public class SphinxClient {
 			filters.writeInt(SPH_FILTER_VALUES);
 			filters.writeInt(values.length);
 			for (int i = 0; i < values.length; i++) {
-				filters.writeInt(values[i]);
+				filters.writeLong(values[i]);
 			}
 			int excludeValue = 0;
 			if (exclude) {
@@ -735,8 +743,8 @@ public class SphinxClient {
 		try {
 			writeNetUTF8(filters, attribute);
 			filters.writeInt(SPH_FILTER_RANGE);
-			filters.writeInt(min);
-			filters.writeInt(max);
+			filters.writeLong(min);
+			filters.writeLong(max);
 			int excludeValue = 0;
 			if (exclude) {
 				excludeValue = 1;
@@ -1015,6 +1023,13 @@ public class SphinxClient {
 			/* comment */
 			writeNetUTF8(out, comment);
 
+			/* attribute overrides */
+			out.writeInt(overrides.size());
+			
+			/* select list */
+			writeNetUTF8(out, comment);
+
+			
 			/* done! */
 			out.flush();
 			int qIndex = reqs.size();
@@ -1122,6 +1137,13 @@ public class SphinxClient {
 						// TODO FIXME: String attrName =
 						// res.attrNames[attrNumber];
 						int type = res.attrTypes[attrNumber];
+
+						/* handle bigints */
+						if (type == SPH_ATTR_BIGINT) {
+							docInfo.addAttribute(attrNumber, new Long(in
+									.readLong()));
+							continue;
+						}
 
 						/* handle floats */
 						if (type == SPH_ATTR_FLOAT) {
@@ -1331,6 +1353,8 @@ public class SphinxClient {
 			req.writeInt(attrs.length);
 			for (int i = 0; i < attrs.length; i++) {
 				writeNetUTF8(req, attrs[i]);
+				// mva? mutli variables array
+				req.writeInt(0);
 			}
 
 			req.writeInt(values.length);
