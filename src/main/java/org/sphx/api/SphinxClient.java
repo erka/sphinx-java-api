@@ -28,145 +28,147 @@ import java.io.StringWriter;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 /** Sphinx client class. */
 public class SphinxClient {
-	
+
 	private static final int EXCEPTS_WEIGHT_ORDER_FLAG = 16;
 	private static final int EXCEPTS_USE_BOUNDARIES_FLAG = 8;
 	private static final int EXCEPTS_SINGLE_PASSAGE_FLAG = 4;
 	private static final int EXCEPTS_EXACT_PHASE_FLAG = 2;
-	
+
 	private static final Integer DEFAULT_EXCEPTS_AROUND = new Integer(5);
 	private static final Integer DEFAULT_EXCEPTS_LIMIT = new Integer(256);
 	private static final float MILLSEC_IN_SEC = 1000.0f;
 	private static final int DEFAULT_LIMIT = 20;
 	private static final int DEFAULT_SEARCHD_PORT = 3312;
-	public static final long MAX_DWORD = 4294967296L; /*2 ^ 32*/
-	
+	public static final long MAX_DWORD = 4294967296L; /* 2 ^ 32 */
+
 	/* matching modes */
-	public static final int SPH_MATCH_ALL			= 0;
-	public static final int SPH_MATCH_ANY			= 1;
-	public static final int SPH_MATCH_PHRASE		= 2;
-	public static final int SPH_MATCH_BOOLEAN		= 3;
-	public static final int SPH_MATCH_EXTENDED		= 4;
-	public static final int SPH_MATCH_FULLSCAN		= 5;
-	public static final int SPH_MATCH_EXTENDED2		= 6;
+	public static final int SPH_MATCH_ALL = 0;
+	public static final int SPH_MATCH_ANY = 1;
+	public static final int SPH_MATCH_PHRASE = 2;
+	public static final int SPH_MATCH_BOOLEAN = 3;
+	public static final int SPH_MATCH_EXTENDED = 4;
+	public static final int SPH_MATCH_FULLSCAN = 5;
+	public static final int SPH_MATCH_EXTENDED2 = 6;
 
 	/* ranking modes (extended2 only) */
-	public static final int SPH_RANK_PROXIMITY_BM25	= 0;
-	public static final int SPH_RANK_BM25			= 1;
-	public static final int SPH_RANK_NONE			= 2;
-	public static final int SPH_RANK_WORDCOUNT		= 3;
-	public static final int SPH_RANK_PROXIMITY		= 4;
+	public static final int SPH_RANK_PROXIMITY_BM25 = 0;
+	public static final int SPH_RANK_BM25 = 1;
+	public static final int SPH_RANK_NONE = 2;
+	public static final int SPH_RANK_WORDCOUNT = 3;
+	public static final int SPH_RANK_PROXIMITY = 4;
 
 	/* sorting modes */
-	public static final int SPH_SORT_RELEVANCE		= 0;
-	public static final int SPH_SORT_ATTR_DESC		= 1;
-	public static final int SPH_SORT_ATTR_ASC		= 2;
-	public static final int SPH_SORT_TIME_SEGMENTS	= 3;
-	public static final int SPH_SORT_EXTENDED		= 4;
-	public static final int SPH_SORT_EXPR			= 5;
+	public static final int SPH_SORT_RELEVANCE = 0;
+	public static final int SPH_SORT_ATTR_DESC = 1;
+	public static final int SPH_SORT_ATTR_ASC = 2;
+	public static final int SPH_SORT_TIME_SEGMENTS = 3;
+	public static final int SPH_SORT_EXTENDED = 4;
+	public static final int SPH_SORT_EXPR = 5;
 
 	/* grouping functions */
-	public static final int SPH_GROUPBY_DAY			= 0;
-	public static final int SPH_GROUPBY_WEEK		= 1;
-	public static final int SPH_GROUPBY_MONTH		= 2;
-	public static final int SPH_GROUPBY_YEAR		= 3;
-	public static final int SPH_GROUPBY_ATTR		= 4;
-	public static final int SPH_GROUPBY_ATTRPAIR	= 5;
+	public static final int SPH_GROUPBY_DAY = 0;
+	public static final int SPH_GROUPBY_WEEK = 1;
+	public static final int SPH_GROUPBY_MONTH = 2;
+	public static final int SPH_GROUPBY_YEAR = 3;
+	public static final int SPH_GROUPBY_ATTR = 4;
+	public static final int SPH_GROUPBY_ATTRPAIR = 5;
 
 	/* searchd reply status codes */
-	public static final int SEARCHD_OK				= 0;
-	public static final int SEARCHD_ERROR			= 1;
-	public static final int SEARCHD_RETRY			= 2;
-	public static final int SEARCHD_WARNING			= 3;
+	public static final int SEARCHD_OK = 0;
+	public static final int SEARCHD_ERROR = 1;
+	public static final int SEARCHD_RETRY = 2;
+	public static final int SEARCHD_WARNING = 3;
 
 	/* attribute types */
-	public static final int SPH_ATTR_INTEGER		= 1;
-	public static final int SPH_ATTR_TIMESTAMP		= 2;
-	public static final int SPH_ATTR_ORDINAL		= 3;
-	public static final int SPH_ATTR_BOOL			= 4;
-	public static final int SPH_ATTR_FLOAT			= 5;
-	public static final int SPH_ATTR_BIGINT			= 6;
-	public static final int SPH_ATTR_MULTI			= 0x40000000;
-
+	public static final int SPH_ATTR_INTEGER = 1;
+	public static final int SPH_ATTR_TIMESTAMP = 2;
+	public static final int SPH_ATTR_ORDINAL = 3;
+	public static final int SPH_ATTR_BOOL = 4;
+	public static final int SPH_ATTR_FLOAT = 5;
+	public static final int SPH_ATTR_BIGINT = 6;
+	public static final int SPH_ATTR_MULTI = 0x40000000;
 
 	/* searchd commands */
-	public static final int SEARCHD_COMMAND_SEARCH		= 0;
-	public static final int SEARCHD_COMMAND_EXCERPT		= 1;
-	public static final int SEARCHD_COMMAND_UPDATE		= 2;
-	public static final int SEARCHD_COMMAND_KEYWORDS	= 3;
-	public static final int SEARCHD_COMMAND_PERSIST		= 4;
+	public static final int SEARCHD_COMMAND_SEARCH = 0;
+	public static final int SEARCHD_COMMAND_EXCERPT = 1;
+	public static final int SEARCHD_COMMAND_UPDATE = 2;
+	public static final int SEARCHD_COMMAND_KEYWORDS = 3;
+	public static final int SEARCHD_COMMAND_PERSIST = 4;
 
 	/* searchd command versions */
-	public static final int VER_MAJOR_PROTO			= 0x1;
-	public static final int VER_COMMAND_SEARCH		= 0x116;
-	public static final int VER_COMMAND_EXCERPT		= 0x100;
-	public static final int VER_COMMAND_UPDATE		= 0x102;
-	public static final int VER_COMMAND_KEYWORDS	= 0x100;
+	public static final int VER_MAJOR_PROTO = 0x1;
+	public static final int VER_COMMAND_SEARCH = 0x116;
+	public static final int VER_COMMAND_EXCERPT = 0x100;
+	public static final int VER_COMMAND_UPDATE = 0x102;
+	public static final int VER_COMMAND_KEYWORDS = 0x100;
 
 	/* filter types */
 	private static final int SPH_FILTER_VALUES = 0;
 	private static final int SPH_FILTER_RANGE = 1;
 	// TODO FIXME private static final int SPH_FILTER_FLOATRANGE = 2;
 
-	private String		host;
-	private int			port;
-	private int			offset;
-	private int			limit;
-	private int			mode;
-	private int[]		weights;
-	private int			sortMode;
-	private String		sortby;
-	private int			minId;
-	private int			maxId;
-	private ByteArrayOutputStream	rawFilters;
-	private DataOutputStream		filters;
-	private int			filterCount;
-	private String		groupBy;
-	private int			groupFunc;
-	private String		groupSort;
-	private String		groupDistinct;
-	private int			maxMatches;
-	private int			cutoff;
-	private int			retryCount;
-	private int			retryDelay;
-	private String		latitudeAttr;
-	private String		longitudeAttr;
-	private float		latitude;
-	private float		longitude;
-	private String		error;
-	private String		warning;
-	private ArrayList	reqs;
-	private Map			indexWeights;
-	private int			rankingMode;
-	private int			maxQueryTime;
-	private Map			fieldWeights;
-	private ArrayList	overrides;
-	private String 		selectList;
-	
+	private String host;
+	private int port;
+	private int offset;
+	private int limit;
+	private int mode;
+	private int[] weights;
+	private int sortMode;
+	private String sortby;
+	private int minId;
+	private int maxId;
+	private ByteArrayOutputStream rawFilters;
+	private DataOutputStream filters;
+	private int filterCount;
+	private String groupBy;
+	private int groupFunc;
+	private String groupSort;
+	private String groupDistinct;
+	private int maxMatches;
+	private int cutoff;
+	private int retryCount;
+	private int retryDelay;
+	private String latitudeAttr;
+	private String longitudeAttr;
+	private float latitude;
+	private float longitude;
+	private String error;
+	private String warning;
+	private ArrayList reqs;
+	private Map indexWeights;
+	private int rankingMode;
+	private int maxQueryTime;
+	private Map fieldWeights;
+	protected HashSet overrides;
+	private String selectList;
+
 	/** Sphinx client timeout. */
-	public static final int SPH_CLIENT_TIMEOUT_MILLISEC	= 30000;
+	public static final int SPH_CLIENT_TIMEOUT_MILLISEC = 30000;
 	private static final int DEFAULT_MAX_MATCHES = 1000;
 	private static final int MAX_PORT_VALUE = 65536;
 	private static final int SPH_MSG_OFFSET = 4;
 
-
 	/**
-	 * Creates a new SphinxClient instance. 
+	 * Creates a new SphinxClient instance.
 	 */
 	public SphinxClient() {
 		this("localhost", DEFAULT_SEARCHD_PORT);
 	}
 
-	/** 
+	/**
 	 * Creates a new SphinxClient instance, with host:port specification.
-	 * @param sphinxHost the host
-	 * @param sphinxPort the port
+	 * 
+	 * @param sphinxHost
+	 *            the host
+	 * @param sphinxPort
+	 *            the port
 	 */
 	public SphinxClient(final String sphinxHost, final int sphinxPort) {
 		host = sphinxHost;
@@ -205,32 +207,38 @@ public class SphinxClient {
 		indexWeights = new LinkedHashMap();
 		fieldWeights = new LinkedHashMap();
 		rankingMode = SPH_RANK_PROXIMITY_BM25;
-		overrides = new ArrayList();
+		overrides = new HashSet();
 		selectList = "*";
 	}
 
-	/** 
+	/**
 	 * Get last error message, if any.
+	 * 
 	 * @return last warning message
-	 * @deprecated {@link SphinxException} will be throw if error happened 
+	 * @deprecated {@link SphinxException} will be throw if error happened
 	 */
 	public String getLastError() {
 		return error;
 	}
 
-	/** 
+	/**
 	 * Get last warning message, if any.
-	 * @return last warning message 
+	 * 
+	 * @return last warning message
 	 */
 	public String getLastWarning() {
 		return warning;
 	}
 
-	/** 
+	/**
 	 * Set searchd host and port to connect to.
-	 * @param sphinxHost the host
-	 * @param sphinxPort the port
-	 * @throws SphinxException if params are invalid  
+	 * 
+	 * @param sphinxHost
+	 *            the host
+	 * @param sphinxPort
+	 *            the port
+	 * @throws SphinxException
+	 *             if params are invalid
 	 */
 	public void setServer(final String sphinxHost, final int sphinxPort)
 			throws SphinxException {
@@ -238,29 +246,38 @@ public class SphinxClient {
 				"host name must not be empty");
 		check(sphinxPort > 0 && sphinxPort < MAX_PORT_VALUE,
 				"port must be in 1..65535 range");
-		
+
 		host = sphinxHost;
 		port = sphinxPort;
 	}
 
-	/** 
+	/**
 	 * Internal method. Sanity check.
-	 * @param condition the condition
-	 * @param err the error message
-	 * @throws SphinxException if condition is false  
+	 * 
+	 * @param condition
+	 *            the condition
+	 * @param err
+	 *            the error message
+	 * @throws SphinxException
+	 *             if condition is false
 	 */
-	private void check(final boolean condition, final String err) throws SphinxException {
+	private void check(final boolean condition, final String err)
+			throws SphinxException {
 		if (!condition) {
 			error = err;
 			throw new SphinxException(err);
 		}
 	}
 
-	/** 
+	/**
 	 * Internal method. String IO helper.
-	 * @param ostream output stream
-	 * @param str string to write
-	 * @throws IOException if io error occur
+	 * 
+	 * @param ostream
+	 *            output stream
+	 * @param str
+	 *            string to write
+	 * @throws IOException
+	 *             if io error occur
 	 */
 	static void writeNetUTF8(final DataOutputStream ostream, final String str)
 			throws IOException {
@@ -274,13 +291,16 @@ public class SphinxClient {
 	}
 
 	/**
-	 *  Internal method. String IO helper.
-	 *  @param istream input stream
-	 *  @throws IOException if io error occur
-	 *  @return string from sphinx protocol 
+	 * Internal method. String IO helper.
+	 * 
+	 * @param istream
+	 *            input stream
+	 * @throws IOException
+	 *             if io error occur
+	 * @return string from sphinx protocol
 	 */
 	static String readNetUTF8(final DataInputStream istream) throws IOException {
-		istream.readUnsignedShort(); 
+		istream.readUnsignedShort();
 		/*
 		 * searchd emits dword lengths, but Java expects words; lets just skip
 		 * first 2 bytes
@@ -289,10 +309,13 @@ public class SphinxClient {
 	}
 
 	/**
-	 *  Internal method. Unsigned int IO helper.
-	 *  @param istream input stream
-	 *  @throws IOException if io error occur
-	 *  @return value  
+	 * Internal method. Unsigned int IO helper.
+	 * 
+	 * @param istream
+	 *            input stream
+	 * @throws IOException
+	 *             if io error occur
+	 * @return value
 	 */
 	static long readDword(final DataInputStream istream) throws IOException {
 		long v = (long) istream.readInt();
@@ -304,10 +327,15 @@ public class SphinxClient {
 
 	/**
 	 * Exchange versions with sphinx searchd.
-	 * @param sIn input stream
-	 * @param sOut output stream 
-	 * @throws IOException if IO error occur
-	 * @throws SphinxException if invalid version of searchd.
+	 * 
+	 * @param sIn
+	 *            input stream
+	 * @param sOut
+	 *            output stream
+	 * @throws IOException
+	 *             if IO error occur
+	 * @throws SphinxException
+	 *             if invalid version of searchd.
 	 */
 	private void hello(final DataInputStream sIn, final DataOutputStream sOut)
 			throws SphinxException, IOException {
@@ -322,7 +350,9 @@ public class SphinxClient {
 
 	/**
 	 * Close closeable.
-	 * @param c the closeable.
+	 * 
+	 * @param c
+	 *            the closeable.
 	 */
 	void close(final Closeable c) {
 		if (c != null) {
@@ -336,8 +366,10 @@ public class SphinxClient {
 
 	/**
 	 * Get socket to server.
+	 * 
 	 * @return the socket
-	 * @throws IOException if io error occur.
+	 * @throws IOException
+	 *             if io error occur.
 	 */
 	protected Socket getSocket() throws IOException {
 		Socket socket = new Socket(host, port);
@@ -347,8 +379,11 @@ public class SphinxClient {
 
 	/**
 	 * Internal method. Get and check response packet from searchd.
-	 * @param sIn input stream
-	 * @throws SphinxException when error occur
+	 * 
+	 * @param sIn
+	 *            input stream
+	 * @throws SphinxException
+	 *             when error occur
 	 * @return response data
 	 */
 	private byte[] response(final DataInputStream sIn) throws SphinxException {
@@ -356,7 +391,7 @@ public class SphinxClient {
 		/* response */
 		short status = 0, ver = 0;
 		int len = 0;
-		
+
 		try {
 			/* read status fields */
 			status = sIn.readShort();
@@ -374,31 +409,31 @@ public class SphinxClient {
 
 			/* check status */
 			switch (status) {
-				case SEARCHD_OK:
-					break;
-				case SEARCHD_WARNING:
-					DataInputStream in = new DataInputStream(
+			case SEARCHD_OK:
+				break;
+			case SEARCHD_WARNING:
+				DataInputStream in = new DataInputStream(
 						new ByteArrayInputStream(response));
-					int iWarnLen = in.readInt();
-					warning = new String(response, SPH_MSG_OFFSET, iWarnLen);
-					System.arraycopy(response, SPH_MSG_OFFSET + iWarnLen, response, 0,
-						response.length - SPH_MSG_OFFSET - iWarnLen);
-					break;
-				case SEARCHD_ERROR:
-					throw new SphinxException("searchd error: "
+				int iWarnLen = in.readInt();
+				warning = new String(response, SPH_MSG_OFFSET, iWarnLen);
+				System.arraycopy(response, SPH_MSG_OFFSET + iWarnLen, response,
+						0, response.length - SPH_MSG_OFFSET - iWarnLen);
+				break;
+			case SEARCHD_ERROR:
+				throw new SphinxException("searchd error: "
 						+ new String(response, SPH_MSG_OFFSET, response.length
 								- SPH_MSG_OFFSET));
-				case SEARCHD_RETRY:
-					throw new SphinxException("temporary searchd error: "
+			case SEARCHD_RETRY:
+				throw new SphinxException("temporary searchd error: "
 						+ new String(response, SPH_MSG_OFFSET, response.length
 								- SPH_MSG_OFFSET));
-				default:
-					throw new SphinxException(
+			default:
+				throw new SphinxException(
 						"searched returned unknown status, code=" + status);
 			}
-			
+
 			return response;
-			
+
 		} catch (IOException e) {
 			String message = "received zero-sized searchd response"
 					+ " (searchd crashed?): " + e.getMessage();
@@ -418,16 +453,19 @@ public class SphinxClient {
 			throw new SphinxException(message);
 		}
 	}
-	
 
 	/**
 	 * Internal method. Connect to searchd, send request, get response as
 	 * DataInputStream.
 	 * 
-	 * @param command the command
-	 * @param version the clien version
-	 * @param req the request data
-	 * @throws SphinxException if some error happened.
+	 * @param command
+	 *            the command
+	 * @param version
+	 *            the clien version
+	 * @param req
+	 *            the request data
+	 * @throws SphinxException
+	 *             if some error happened.
 	 * @return result data stream
 	 */
 	DataInputStream executeCommand(final int command, final int version,
@@ -478,7 +516,7 @@ public class SphinxClient {
 	private void request(final int command, final int version,
 			final ByteArrayOutputStream req, final DataOutputStream dOut)
 			throws IOException {
-		
+
 		dOut.writeShort(command);
 		dOut.writeShort(version);
 		byte[] reqBytes = req.toByteArray();
@@ -488,7 +526,9 @@ public class SphinxClient {
 
 	/**
 	 * Close socket.
-	 * @param sock the socket.
+	 * 
+	 * @param sock
+	 *            the socket.
 	 */
 	void close(final Socket sock) {
 		if (sock != null) {
@@ -503,11 +543,17 @@ public class SphinxClient {
 	/**
 	 * Set matches offset and limit to return to client, max matches to retrieve
 	 * on server, and cutoff.
-	 * @param offsetValue the offset
-	 * @param limitValue the limit 
-	 * @param max max matches to retrieve
-	 * @param cutoffValue cutoff
-	 * @throws SphinxException if invalid value. 
+	 * 
+	 * @param offsetValue
+	 *            the offset
+	 * @param limitValue
+	 *            the limit
+	 * @param max
+	 *            max matches to retrieve
+	 * @param cutoffValue
+	 *            cutoff
+	 * @throws SphinxException
+	 *             if invalid value.
 	 */
 	public void setLimits(final int offsetValue, final int limitValue,
 			final int max, final int cutoffValue) throws SphinxException {
@@ -525,21 +571,30 @@ public class SphinxClient {
 	/**
 	 * Set matches offset and limit to return to client, and max matches to
 	 * retrieve on server.
-	 * @param offsetValue the offset
-	 * @param limitValue the limit 
-	 * @param maxValue max matches to retrieve
-	 * @throws SphinxException if invalid value. 
+	 * 
+	 * @param offsetValue
+	 *            the offset
+	 * @param limitValue
+	 *            the limit
+	 * @param maxValue
+	 *            max matches to retrieve
+	 * @throws SphinxException
+	 *             if invalid value.
 	 */
 	public void setLimits(final int offsetValue, final int limitValue,
 			final int maxValue) throws SphinxException {
 		setLimits(offsetValue, limitValue, maxValue, cutoff);
 	}
 
-	/** 
+	/**
 	 * Set matches offset and limit to return to client.
-	 * @param offsetValue the offset
-	 * @param limitValue the limit 
-	 * @throws SphinxException if invalid value. 
+	 * 
+	 * @param offsetValue
+	 *            the offset
+	 * @param limitValue
+	 *            the limit
+	 * @throws SphinxException
+	 *             if invalid value.
 	 */
 	public void setLimits(final int offsetValue, final int limitValue)
 			throws SphinxException {
@@ -549,50 +604,65 @@ public class SphinxClient {
 	/**
 	 * Set maximum query time, in milliseconds, per-index, 0 means "do not
 	 * limit".
-	 * @param maxTime maximum time for get result
-	 * @throws SphinxException if invalid value. 
+	 * 
+	 * @param maxTime
+	 *            maximum time for get result
+	 * @throws SphinxException
+	 *             if invalid value.
 	 */
 	public void setMaxQueryTime(final int maxTime) throws SphinxException {
 		check(maxTime >= 0, "max_query_time must not be negative");
 		maxQueryTime = maxTime;
 	}
 
-	/** 
+	/**
 	 * Set matching mode.
-	 * @param modeValue the match mode
-	 * @throws SphinxException if invalid value. 
+	 * 
+	 * @param modeValue
+	 *            the match mode
+	 * @throws SphinxException
+	 *             if invalid value.
 	 */
 	public void setMatchMode(final int modeValue) throws SphinxException {
 		check(modeValue == SPH_MATCH_ALL || modeValue == SPH_MATCH_ANY
-				|| modeValue == SPH_MATCH_PHRASE || modeValue == SPH_MATCH_BOOLEAN
-				|| modeValue == SPH_MATCH_EXTENDED || modeValue == SPH_MATCH_EXTENDED2,
+				|| modeValue == SPH_MATCH_PHRASE
+				|| modeValue == SPH_MATCH_BOOLEAN
+				|| modeValue == SPH_MATCH_EXTENDED
+				|| modeValue == SPH_MATCH_EXTENDED2,
 				"unknown mode value; use one of the SPH_MATCH_xxx constants");
 		mode = modeValue;
 	}
 
-	/** 
+	/**
 	 * Set ranking mode.
-	 * @param ranker the rank mode
-	 * @throws SphinxException if invalid value. 
+	 * 
+	 * @param ranker
+	 *            the rank mode
+	 * @throws SphinxException
+	 *             if invalid value.
 	 */
 	public void setRankingMode(final int ranker) throws SphinxException {
 		check(ranker == SPH_RANK_PROXIMITY_BM25 || ranker == SPH_RANK_BM25
 				|| ranker == SPH_RANK_NONE || ranker == SPH_RANK_WORDCOUNT
 				|| ranker == SPH_RANK_PROXIMITY,
 				"unknown ranker value; use one of the SPH_RANK_xxx constants");
-		
+
 		rankingMode = ranker;
 	}
 
 	/**
 	 * Set sorting mode.
-	 * @param modeValue the sort mode
-	 * @param sortbyValue sort by attribute
-	 * @throws SphinxException if invalid value. 
+	 * 
+	 * @param modeValue
+	 *            the sort mode
+	 * @param sortbyValue
+	 *            sort by attribute
+	 * @throws SphinxException
+	 *             if invalid value.
 	 */
 	public void setSortMode(final int modeValue, final String sortbyValue)
 			throws SphinxException {
-		
+
 		check(modeValue == SPH_SORT_RELEVANCE
 				|| modeValue == SPH_SORT_ATTR_DESC
 				|| modeValue == SPH_SORT_ATTR_ASC
@@ -613,8 +683,11 @@ public class SphinxClient {
 	/**
 	 * Set per-field weights (all values must be positive). WARNING: DEPRECATED,
 	 * use SetFieldWeights() instead.
-	 * @param weightValues the weights
-	 * @throws SphinxException if invalid value.
+	 * 
+	 * @param weightValues
+	 *            the weights
+	 * @throws SphinxException
+	 *             if invalid value.
 	 */
 	public void setWeights(final int[] weightValues) throws SphinxException {
 		check(weightValues != null, "weights must not be null");
@@ -636,13 +709,14 @@ public class SphinxClient {
 		System.arraycopy(weights, 0, weightsValue, 0, weights.length);
 		return weightsValue;
 	}
-	
+
 	/**
 	 * Bind per-field weights by field name.
 	 * 
 	 * @param weightValues
 	 *            hash which maps String index names to Integer weights
-	 * @throws SphinxException if invalid value. 
+	 * @throws SphinxException
+	 *             if invalid value.
 	 */
 	public void setFieldWeights(final Map weightValues) throws SphinxException {
 		/* FIXME! implement checks here */
@@ -658,21 +732,26 @@ public class SphinxClient {
 	 * 
 	 * @param weightValues
 	 *            hash which maps String index names to Integer weights
-	 * @throws SphinxException if invalid value. 
+	 * @throws SphinxException
+	 *             if invalid value.
 	 */
 	public void setIndexWeights(final Map weightValues) throws SphinxException {
 		/* FIXME! implement checks here */
-		indexWeights =  new LinkedHashMap();
+		indexWeights = new LinkedHashMap();
 		if (weightValues != null) {
 			indexWeights.putAll(weightValues);
 		}
 	}
 
-	/** 
+	/**
 	 * Set document IDs range to match.
-	 * @param min minimum value
-	 * @param max maximum value
-	 * @throws SphinxException if invalid value. 
+	 * 
+	 * @param min
+	 *            minimum value
+	 * @param max
+	 *            maximum value
+	 * @throws SphinxException
+	 *             if invalid value.
 	 */
 	public void setIDRange(final int min, final int max) throws SphinxException {
 		check(min <= max, "min must be less or equal to max");
@@ -683,10 +762,15 @@ public class SphinxClient {
 	/**
 	 * Set values filter. Only match records where attribute value is in given
 	 * set.
-	 * @param attribute the attribute for filter
-	 * @param values array of values
-	 * @param exclude exclude
-	 * @throws SphinxException if invalid value. 
+	 * 
+	 * @param attribute
+	 *            the attribute for filter
+	 * @param values
+	 *            array of values
+	 * @param exclude
+	 *            exclude
+	 * @throws SphinxException
+	 *             if invalid value.
 	 */
 	public void setFilter(final String attribute, final int[] values,
 			final boolean exclude) throws SphinxException {
@@ -717,26 +801,37 @@ public class SphinxClient {
 	/**
 	 * Set values filter with a single value (syntax sugar; see
 	 * {@link #setFilter(String,int[],boolean)}).
-	 * @param attribute the attribute for filter
-	 * @param value value value
-	 * @param exclude exclude
-	 * @throws SphinxException if invalid value. 
+	 * 
+	 * @param attribute
+	 *            the attribute for filter
+	 * @param value
+	 *            value value
+	 * @param exclude
+	 *            exclude
+	 * @throws SphinxException
+	 *             if invalid value.
 	 */
 	public void setFilter(final String attribute, final int value,
 			final boolean exclude) throws SphinxException {
-		
-		int[] values = new int[] {value};
+
+		int[] values = {value};
 		setFilter(attribute, values, exclude);
 	}
 
 	/**
 	 * Set integer range filter. Only match records if attribute value is
 	 * beetwen min and max (inclusive).
-	 * @param attribute the attribute for filter
-	 * @param min minimum value
-	 * @param max maximum value
-	 * @param exclude exclude
-	 * @throws SphinxException if invalid value or IOException occur. 
+	 * 
+	 * @param attribute
+	 *            the attribute for filter
+	 * @param min
+	 *            minimum value
+	 * @param max
+	 *            maximum value
+	 * @param exclude
+	 *            exclude
+	 * @throws SphinxException
+	 *             if invalid value or IOException occur.
 	 */
 	public void setFilterRange(final String attribute, final int min,
 			final int max, final boolean exclude) throws SphinxException {
@@ -761,11 +856,17 @@ public class SphinxClient {
 	/**
 	 * Set float range filter. Only match records if attribute value is beetwen
 	 * min and max (inclusive).
-	 * @param attribute the attribute for filter
-	 * @param min minimum value
-	 * @param max maximum value
-	 * @param exclude exclude
-	 * @throws SphinxException if invalid value or IOException occur.
+	 * 
+	 * @param attribute
+	 *            the attribute for filter
+	 * @param min
+	 *            minimum value
+	 * @param max
+	 *            maximum value
+	 * @param exclude
+	 *            exclude
+	 * @throws SphinxException
+	 *             if invalid value or IOException occur.
 	 */
 	public void setFilterFloatRange(final String attribute, final float min,
 			final float max, final boolean exclude) throws SphinxException {
@@ -789,12 +890,18 @@ public class SphinxClient {
 
 	/**
 	 * Setup geographical anchor point. Required to use
-	 * @param latitudeAttrValue the latitude attribute
-	 * @param longitudeAttrValue the longitude attribute
-	 * @param latitudeValue the latitude
-	 * @param longitudeValue the longitude
+	 * 
+	 * @param latitudeAttrValue
+	 *            the latitude attribute
+	 * @param longitudeAttrValue
+	 *            the longitude attribute
+	 * @param latitudeValue
+	 *            the latitude
+	 * @param longitudeValue
+	 *            the longitude
 	 * @geodist in filters and sorting; distance will be computed to this point.
-	 * @throws SphinxException if invalid value
+	 * @throws SphinxException
+	 *             if invalid value
 	 */
 	public void setGeoAnchor(final String latitudeAttrValue,
 			final String longitudeAttrValue, final float latitudeValue,
@@ -812,10 +919,15 @@ public class SphinxClient {
 
 	/**
 	 * Set grouping attribute and function.
-	 * @param attribute the attribute for group
-	 * @param func the function of group process
-	 * @param groupSortValue the groupsort
-	 * @throws SphinxException if invalid value
+	 * 
+	 * @param attribute
+	 *            the attribute for group
+	 * @param func
+	 *            the function of group process
+	 * @param groupSortValue
+	 *            the groupsort
+	 * @throws SphinxException
+	 *             if invalid value
 	 */
 	public void setGroupBy(final String attribute, final int func,
 			final String groupSortValue) throws SphinxException {
@@ -832,9 +944,13 @@ public class SphinxClient {
 	/**
 	 * Set grouping attribute and function with default ("@group desc")
 	 * groupsort (syntax sugar).
-	 * @param attribute the attribute for group
-	 * @param func the function of group process
-	 * @throws SphinxException if invalid value
+	 * 
+	 * @param attribute
+	 *            the attribute for group
+	 * @param func
+	 *            the function of group process
+	 * @throws SphinxException
+	 *             if invalid value
 	 */
 	public void setGroupBy(final String attribute, final int func)
 			throws SphinxException {
@@ -843,7 +959,9 @@ public class SphinxClient {
 
 	/**
 	 * Set count-distinct attribute for group-by queries.
-	 * @param attribute the attribute for group
+	 * 
+	 * @param attribute
+	 *            the attribute for group
 	 */
 	public void setGroupDistinct(final String attribute) {
 		groupDistinct = attribute;
@@ -851,9 +969,13 @@ public class SphinxClient {
 
 	/**
 	 * Set distributed retries count and delay.
-	 * @param count how many retries
-	 * @param delay what delay between retry
-	 * @throws SphinxException if invalid value
+	 * 
+	 * @param count
+	 *            how many retries
+	 * @param delay
+	 *            what delay between retry
+	 * @throws SphinxException
+	 *             if invalid value
 	 */
 	public void setRetries(final int count, final int delay)
 			throws SphinxException {
@@ -865,8 +987,11 @@ public class SphinxClient {
 
 	/**
 	 * Set distributed retries count with default (zero) delay (syntax sugar).
-	 * @param count how many retries
-	 * @throws SphinxException if invalid value
+	 * 
+	 * @param count
+	 *            how many retries
+	 * @throws SphinxException
+	 *             if invalid value
 	 */
 	public void setRetries(final int count) throws SphinxException {
 		setRetries(count, 0);
@@ -889,9 +1014,12 @@ public class SphinxClient {
 	/**
 	 * Connect to searchd server and run current search query against all
 	 * indexes (syntax sugar).
-	 * @param query the query
+	 * 
+	 * @param query
+	 *            the query
 	 * @return result from sphinx
-	 * @throws SphinxException if error happened.
+	 * @throws SphinxException
+	 *             if error happened.
 	 */
 	public SphinxResult query(final String query) throws SphinxException {
 		return query(query, "*", "");
@@ -900,10 +1028,14 @@ public class SphinxClient {
 	/**
 	 * Connect to searchd server and run current search query against all
 	 * indexes (syntax sugar).
-	 * @param query the query
-	 * @param index the index name
+	 * 
+	 * @param query
+	 *            the query
+	 * @param index
+	 *            the index name
 	 * @return result from sphinx
-	 * @throws SphinxException if error happened.
+	 * @throws SphinxException
+	 *             if error happened.
 	 */
 	public SphinxResult query(final String query, final String index)
 			throws SphinxException {
@@ -911,18 +1043,23 @@ public class SphinxClient {
 	}
 
 	/**
-	 *  Connect to searchd server and run current search query.
-	 *  @param query the query
-	 *  @param index the index name
-	 *  @param comment the comment
-	 *  @return result from sphinx
-	 *  @throws SphinxException if error happened.
+	 * Connect to searchd server and run current search query.
+	 * 
+	 * @param query
+	 *            the query
+	 * @param index
+	 *            the index name
+	 * @param comment
+	 *            the comment
+	 * @return result from sphinx
+	 * @throws SphinxException
+	 *             if error happened.
 	 */
-	public SphinxResult query(final String query, final String index, final String comment)
-			throws SphinxException {
+	public SphinxResult query(final String query, final String index,
+			final String comment) throws SphinxException {
 		check(reqs == null || reqs.size() == 0,
 				"AddQuery() and Query() can not be combined; "
-				+ "use RunQueries() instead");
+						+ "use RunQueries() instead");
 
 		addQuery(query, index, comment);
 		SphinxResult[] results = runQueries();
@@ -934,14 +1071,19 @@ public class SphinxClient {
 
 	/**
 	 * Add new query with current settings to current search request.
-	 * @param query the query
-	 * @param index the index name
-	 * @param comment the comment
-	 * @throws SphinxException if error happened
+	 * 
+	 * @param query
+	 *            the query
+	 * @param index
+	 *            the index name
+	 * @param comment
+	 *            the comment
+	 * @throws SphinxException
+	 *             if error happened
 	 * @return position query in queries collection.
 	 */
-	public int addQuery(final String query, final String index, final String comment)
-			throws SphinxException {
+	public int addQuery(final String query, final String index,
+			final String comment) throws SphinxException {
 		ByteArrayOutputStream req = new ByteArrayOutputStream();
 
 		/* build request */
@@ -1026,11 +1168,10 @@ public class SphinxClient {
 
 			/* attribute overrides */
 			out.writeInt(overrides.size());
-			
+
 			/* select list */
 			writeNetUTF8(out, selectList);
 
-			
 			/* done! */
 			out.flush();
 			int qIndex = reqs.size();
@@ -1053,8 +1194,10 @@ public class SphinxClient {
 
 	/**
 	 * Run all previously added search queries.
+	 * 
 	 * @return result from sphinx.
-	 * @throws SphinxException if error or no queries for run.
+	 * @throws SphinxException
+	 *             if error or no queries for run.
 	 */
 	public SphinxResult[] runQueries() throws SphinxException {
 
@@ -1188,6 +1331,7 @@ public class SphinxClient {
 	/**
 	 * Connect to searchd server and generate excerpts (snippets) from given
 	 * documents.
+	 * 
 	 * @param docs
 	 *            documents
 	 * @param index
@@ -1198,7 +1342,8 @@ public class SphinxClient {
 	 *            maps String keys to String or Integer values (see the
 	 *            documentation for complete keys list).
 	 * @return null on failure, array of snippets on success.
-	 * @throws SphinxException if illegal arguments
+	 * @throws SphinxException
+	 *             if illegal arguments
 	 */
 	public String[] buildExcerpts(final String[] docs, final String index,
 			final String words, final Map userOptions) throws SphinxException {
@@ -1284,7 +1429,8 @@ public class SphinxClient {
 					"internal error: failed to build request: " + e);
 		}
 
-		DataInputStream in = executeCommand(SEARCHD_COMMAND_EXCERPT, VER_COMMAND_EXCERPT, reqBuf);
+		DataInputStream in = executeCommand(SEARCHD_COMMAND_EXCERPT,
+				VER_COMMAND_EXCERPT, reqBuf);
 		try {
 			String[] res = new String[docs.length];
 			for (int i = 0; i < docs.length; i++) {
@@ -1311,20 +1457,20 @@ public class SphinxClient {
 	 *            following ones
 	 * @return -1 on failure, amount of actually found and updated documents
 	 *         (might be 0) on success
-	 *
+	 * 
 	 * @throws SphinxException
 	 *             on invalid parameters
 	 */
 	public int updateAttributes(final String index, final String[] attrs,
 			final long[][] values) throws SphinxException {
 		return updateAttributes(index, attrs, values, false);
-	}	
-	
+	}
+
 	/**
 	 * Connect to searchd server and update given attributes on given documents
 	 * in given indexes. Sample code that will set group_id=123 where id=1 and
 	 * group_id=456 where id=3:
-	 *
+	 * 
 	 * <pre>
 	 * String[] attrs = new String[1];
 	 * attrs[0] = &quot;group_id&quot;;
@@ -1337,7 +1483,7 @@ public class SphinxClient {
 	 * values[1][1] = 456;
 	 * int res = cl.UpdateAttributes(&quot;test1&quot;, attrs, values);
 	 * </pre>
-	 *
+	 * 
 	 * @param index
 	 *            index name(s) to update; might be distributed
 	 * @param attrs
@@ -1346,11 +1492,11 @@ public class SphinxClient {
 	 *            array of updates; each long[] entry must contains document ID
 	 *            in the first element, and all new attribute values in the
 	 *            following ones
-	 * @param mva 
-	 * 			 if true value is multi-array value otherwise false
+	 * @param mva
+	 *            if true value is multi-array value otherwise false
 	 * @return -1 on failure, amount of actually found and updated documents
 	 *         (might be 0) on success
-	 *
+	 * 
 	 * @throws SphinxException
 	 *             on invalid parameters
 	 */
@@ -1358,10 +1504,8 @@ public class SphinxClient {
 			final long[][] values, final boolean mva) throws SphinxException {
 		/* check args */
 		check(index != null && index.length() > 0, "no index name provided");
-		check(attrs != null && attrs.length > 0,
-				"no attribute names provided");
-		check(values != null && values.length > 0,
-				"no update entries provided");
+		check(attrs != null && attrs.length > 0, "no attribute names provided");
+		check(values != null && values.length > 0, "no update entries provided");
 
 		for (int i = 0; i < values.length; i++) {
 			check(values[i] != null, "update entry #" + i + " is null");
@@ -1369,8 +1513,8 @@ public class SphinxClient {
 				check(values[i].length >= 1, "update entry #" + i
 						+ " has wrong length");
 			} else {
-				check(values[i].length == 1 + attrs.length, "update entry #" + i
-					+ " has wrong length");
+				check(values[i].length == 1 + attrs.length, "update entry #"
+						+ i + " has wrong length");
 			}
 		}
 
@@ -1428,7 +1572,7 @@ public class SphinxClient {
 	 * Connect to searchd server, and generate keyword list for a given query.
 	 * Returns null on failure, an array of Maps with misc per-keyword info on
 	 * success.
-	 *
+	 * 
 	 * @param query
 	 *            the query
 	 * @param index
@@ -1436,7 +1580,8 @@ public class SphinxClient {
 	 * @param hits
 	 *            include hits statistics
 	 * @return build keywords.
-	 * @throws SphinxException if error.
+	 * @throws SphinxException
+	 *             if error.
 	 */
 	public Map[] buildKeywords(final String query, final String index,
 			final boolean hits) throws SphinxException {
@@ -1481,15 +1626,56 @@ public class SphinxClient {
 			throw new SphinxException("incomplete reply");
 		}
 	}
-	
+
 	/**
 	 * Set select-list (attributes or expressions), SQL-like syntax.
-	 * @param select the select-List
+	 * 
+	 * @param select
+	 *            the select-List
 	 * @throws SphinxException
 	 *             on invalid parameters
 	 */
 	public void setSelectList(final String select) throws SphinxException {
-		check(select != null, "select is null");
+		check(select != null, "select must be not empty");
 		this.selectList = select;
+	}
+
+	/**
+	 * Clear all attribute value overrides (for multi-queries).
+	 */
+	public void resetOverrides() {
+		this.overrides = new HashSet();
+	}
+
+	/**
+	 * Set attribute values override. There can be only one override per
+	 * attribute. <tt>values</tt> must be a hash that maps document IDs to
+	 * attribute values.
+	 * 
+	 * @param attrName attribute name
+	 * @param attrType attribute type
+	 * @param values map document IDs to attribute values
+	 * @throws SphinxException if parameters are invalid
+	 */
+	public void setOverride(final String attrName, final int attrType,
+			final Map/* <Long, Number> */values) throws SphinxException {
+		check(attrName != null && attrName.length() > 0,
+				"attrName must not be empty");
+		check(
+				attrType == SPH_ATTR_INTEGER || attrType == SPH_ATTR_TIMESTAMP
+						|| attrType == SPH_ATTR_BOOL
+						|| attrType == SPH_ATTR_FLOAT
+						|| attrType == SPH_ATTR_BIGINT,
+				"unsupported attrType (must be one of INTEGER, TIMESTAMP, BOOL, FLOAT, or BIGINT)");
+		check(values != null, "values must be not empty");
+		
+		SphinxOverride override = new SphinxOverride();
+		override.setAttrName(attrName);
+		override.setAttrType(attrType);
+		override.setValues(values);
+		if (overrides.contains(override)) {
+			overrides.remove(override);
+		}
+		overrides.add(override);
 	}
 }

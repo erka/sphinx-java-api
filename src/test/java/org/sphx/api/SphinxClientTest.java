@@ -12,24 +12,29 @@ import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 import junit.framework.TestCase;
+
 /**
- * To execute these tests you need to execute sphinx_test.sql and configure sphinx using sphinx.conf
+ * To execute these tests you need to execute sphinx_test.sql and configure
+ * sphinx using sphinx.conf
+ * 
  * @author erka
- *
+ * 
  */
 public class SphinxClientTest extends TestCase {
 
 	private SphinxClient sphinxClient;
+
 	protected void setUp() throws Exception {
 		super.setUp();
 		sphinxClient = new SphinxClient();
 	}
 
-  	static public void assertEquals(int[] expected, int[] actual) {
-		if (expected.length != actual.length){
+	static public void assertEquals(int[] expected, int[] actual) {
+		if (expected.length != actual.length) {
 			fail("array don't equals");
 		}
 		for (int i = 0; i < expected.length; i++) {
@@ -39,20 +44,8 @@ public class SphinxClientTest extends TestCase {
 		}
 	}
 
-	
-  	static public void assertEquals(byte[] expected, byte[] actual) {
-		if (expected.length != actual.length){
-			fail("array don't equals");
-		}
-		for (int i = 0; i < expected.length; i++) {
-			if (expected[i] != actual[i]) {
-				fail("array don't equals");
-			}
-		}
-  	}
-  	
-  	static public void assertEquals(long[] expected, long[] actual) {
-		if (expected.length != actual.length){
+	static public void assertEquals(byte[] expected, byte[] actual) {
+		if (expected.length != actual.length) {
 			fail("array don't equals");
 		}
 		for (int i = 0; i < expected.length; i++) {
@@ -61,27 +54,39 @@ public class SphinxClientTest extends TestCase {
 			}
 		}
 	}
-  	
-  	public void testEqualsIntsArray() throws Exception {
-  		assertEquals(new int[]{-11, 22, 0xFFFF}, new int[]{-11, 22, 0xFFFF});
-  	}
 
-  	public void testEqualsBytesArray() throws Exception {
-  		assertEquals(new byte[]{11, 22 , 0xf}, new byte[]{11,  22 , 0xf});
-  	}
-  	
+	static public void assertEquals(long[] expected, long[] actual) {
+		if (expected.length != actual.length) {
+			fail("array don't equals");
+		}
+		for (int i = 0; i < expected.length; i++) {
+			if (expected[i] != actual[i]) {
+				fail("array don't equals");
+			}
+		}
+	}
+
+	public void testEqualsIntsArray() throws Exception {
+		assertEquals(new int[] { -11, 22, 0xFFFF },
+				new int[] { -11, 22, 0xFFFF });
+	}
+
+	public void testEqualsBytesArray() throws Exception {
+		assertEquals(new byte[] { 11, 22, 0xf }, new byte[] { 11, 22, 0xf });
+	}
+
 	public void testResponseQueryWithNonExistWord() throws SphinxException {
-		SphinxResult result = sphinxClient.query("wifi" + System.currentTimeMillis(), "test1");
+		SphinxResult result = sphinxClient.query("wifi"
+				+ System.currentTimeMillis(), "test1");
 		assertNotNull(result);
 		assertEquals(0, result.totalFound);
-		assertEquals(0, result.getStatus());	
+		assertEquals(0, result.getStatus());
 
 	}
-  	
-  	
+
 	public void testResponseQuery() throws SphinxException {
 		SphinxResult result = sphinxClient.query("wifi", "test1");
-		
+
 		assertEquals(3, result.totalFound);
 		assertEquals(3, result.matches.length);
 		assertTrue(result.time > -1.0);
@@ -90,7 +95,7 @@ public class SphinxClientTest extends TestCase {
 		assertEquals("group_id", attrNames[1]);
 		assertEquals(3, result.total);
 		SphinxMatch[] matchs = result.matches;
-		
+
 		assertEquals(2, matchs[0].getDocId());
 		assertEquals(2, matchs[0].getWeight());
 		assertEquals(new Long(1175658555), matchs[0].getAttrValues().get(0));
@@ -105,37 +110,37 @@ public class SphinxClientTest extends TestCase {
 		assertEquals(1, matchs[2].getWeight());
 		assertEquals(new Long(1175658490), matchs[2].getAttrValues().get(0));
 		assertEquals(new Long(1), matchs[2].getAttrValues().get(1));
-		
 
 		SphinxWordInfo sphinxWordInfo = result.words[0];
 		assertEquals("wifi", sphinxWordInfo.getWord());
 		assertEquals(6, sphinxWordInfo.getHits());
 		assertEquals(3, sphinxWordInfo.getDocs());
 	}
-	
+
 	public void testResponseQueryWrongWay() {
 		try {
 			int addQuery = sphinxClient.addQuery("wifi", "test1", "");
 			assertEquals(0, addQuery);
 			sphinxClient.query("test");
 			fail();
-		}catch (SphinxException e) {
+		} catch (SphinxException e) {
 			assertTrue(true);
-			assertEquals("AddQuery() and Query() can not be combined; use RunQueries() instead", e.getMessage());
+			assertEquals(
+					"AddQuery() and Query() can not be combined; use RunQueries() instead",
+					e.getMessage());
 		}
-	} 
-	
-	
-	
+	}
+
 	public void testResponseQueryForRunQuery() throws SphinxException {
-		
+
 		int addQuery = sphinxClient.addQuery("wifi", "test1", "");
 		assertEquals(0, addQuery);
-		addQuery = sphinxClient.addQuery("thisstringyouwillneverfound", "test1", "");
+		addQuery = sphinxClient.addQuery("thisstringyouwillneverfound",
+				"test1", "");
 		assertEquals(1, addQuery);
 
 		SphinxResult[] results = sphinxClient.runQueries();
-		
+
 		assertEquals(3, results[0].totalFound);
 		assertEquals(3, results[0].matches.length);
 		SphinxWordInfo sphinxWordInfo = results[0].words[0];
@@ -151,28 +156,31 @@ public class SphinxClientTest extends TestCase {
 		assertEquals(0, sphinxWordInfo.getDocs());
 
 	}
-	
+
 	public void testResponseInBuildExcerpts() throws SphinxException {
-		String[] docs = {"what the world", "London is the capital of Great Britain"};
+		String[] docs = { "what the world",
+				"London is the capital of Great Britain" };
 		String index = "test1";
 		String words = "the";
 		Map opts = new HashMap();
-		String[] buildExcerpts = sphinxClient.buildExcerpts(docs, index, words, opts);
+		String[] buildExcerpts = sphinxClient.buildExcerpts(docs, index, words,
+				opts);
 		assertNotNull(buildExcerpts);
 		assertEquals(2, buildExcerpts.length);
-		String[] expected = new String[]{"what <b>the</b> world", "London is <b>the</b> capital of Great Britain"};
+		String[] expected = new String[] { "what <b>the</b> world",
+				"London is <b>the</b> capital of Great Britain" };
 		for (int i = 0; i < expected.length; i++) {
 			assertEquals(expected[i], buildExcerpts[i]);
 		}
-	} 
-	
+	}
+
 	public void testUpdateAttributes() throws SphinxException {
-		String[] attrs = {"group_id"};
-		long[][] values = {{2,1}};
-		
+		String[] attrs = { "group_id" };
+		long[][] values = { { 2, 1 } };
+
 		int updated = sphinxClient.updateAttributes("test1", attrs, values);
 		assertEquals(1, updated);
-		
+
 		SphinxResult result = sphinxClient.query("wifi", "test1");
 		SphinxMatch[] matchs = result.matches;
 		assertEquals(2, matchs[0].getDocId());
@@ -181,22 +189,22 @@ public class SphinxClientTest extends TestCase {
 		values[0][1] = 2;
 		updated = sphinxClient.updateAttributes("test1", attrs, values);
 		assertEquals(1, updated);
-		
+
 		result = sphinxClient.query("wifi", "test1");
 		matchs = result.matches;
 		assertEquals(2, matchs[0].getDocId());
 		assertEquals(new Long(2), matchs[0].getAttrValues().get(1));
 	}
-	
-	
-	public void testMVAUpdateAttributes() throws SphinxException {
-		long[] mvaOriginal = {5, 6, 7, 8};
-		long[] mvaForUpdate = {11, 21};
 
-		String[] attrs = {"tags"};
-		long[][] values = {{2, 11, 21}};
-		
-		int updated = sphinxClient.updateAttributes("test1", attrs, values, true);
+	public void testMVAUpdateAttributes() throws SphinxException {
+		long[] mvaOriginal = { 5, 6, 7, 8 };
+		long[] mvaForUpdate = { 11, 21 };
+
+		String[] attrs = { "tags" };
+		long[][] values = { { 2, 11, 21 } };
+
+		int updated = sphinxClient.updateAttributes("test1", attrs, values,
+				true);
 		assertEquals(1, updated);
 
 		SphinxResult result = sphinxClient.query("wifi", "test1");
@@ -205,7 +213,7 @@ public class SphinxClientTest extends TestCase {
 		long[] newMva = (long[]) matchs[0].getAttrValues().get(3);
 		assertEquals(mvaForUpdate, newMva);
 
-		values[0] = new long[] {2};
+		values[0] = new long[] { 2 };
 		updated = sphinxClient.updateAttributes("test1", attrs, values, true);
 		assertEquals(1, updated);
 
@@ -214,8 +222,8 @@ public class SphinxClientTest extends TestCase {
 		assertEquals(2, matchs[0].getDocId());
 		newMva = (long[]) matchs[0].getAttrValues().get(3);
 		assertEquals(new long[0], newMva);
-		
-		values[0] = new long[] {2, 5, 6, 7, 8};
+
+		values[0] = new long[] { 2, 5, 6, 7, 8 };
 		updated = sphinxClient.updateAttributes("test1", attrs, values, true);
 		assertEquals(1, updated);
 
@@ -227,23 +235,21 @@ public class SphinxClientTest extends TestCase {
 
 	}
 
-
 	public void testUpdateAttributesWithNullAttribute() {
-		String[] attrs = {null};
-		long[][] values = {{2,1}};
-		
+		String[] attrs = { null };
+		long[][] values = { { 2, 1 } };
+
 		try {
 			sphinxClient.updateAttributes("test1", attrs, values);
 			fail();
 		} catch (SphinxException e) {
-			assertEquals("searchd error: index test1: attribute '' not found", e.getMessage());
+			assertEquals("searchd error: index test1: attribute '' not found",
+					e.getMessage());
 		}
 	}
 
-	
 	public void testUpdateAttributesWithWrongIndexParam() {
-		
-		
+
 		try {
 			sphinxClient.updateAttributes(null, null, null);
 			fail();
@@ -277,22 +283,17 @@ public class SphinxClientTest extends TestCase {
 			assertEquals("no attribute names provided", e.getMessage());
 		}
 
-		/* TODO
-		try {
-			sphinxClient.UpdateAttributes("test1", new String[1], null);
-			fail();
-		} catch (SphinxException e) {
-			assertTrue(true);
-			assertEquals("no attribute names provided", e.getMessage());
-		}
-		*/
+		/*
+		 * TODO try { sphinxClient.UpdateAttributes("test1", new String[1],
+		 * null); fail(); } catch (SphinxException e) { assertTrue(true);
+		 * assertEquals("no attribute names provided", e.getMessage()); }
+		 */
 	}
-	
 
 	public void testUpdateAttributesWithWrongValuesParam() {
-		String[] strings = new String[] {"group_id", "created_at"};
+		String[] strings = new String[] { "group_id", "created_at" };
 		try {
-			
+
 			sphinxClient.updateAttributes("test1", strings, null);
 			fail();
 		} catch (SphinxException e) {
@@ -309,7 +310,7 @@ public class SphinxClientTest extends TestCase {
 		}
 
 		try {
-			long values[][] = {null};
+			long values[][] = { null };
 			sphinxClient.updateAttributes("test1", strings, values);
 			fail();
 		} catch (SphinxException e) {
@@ -318,7 +319,7 @@ public class SphinxClientTest extends TestCase {
 		}
 
 		try {
-			long values[][] = {{0, 1}};
+			long values[][] = { { 0, 1 } };
 			sphinxClient.updateAttributes("test1", strings, values);
 			fail();
 		} catch (SphinxException e) {
@@ -327,7 +328,7 @@ public class SphinxClientTest extends TestCase {
 		}
 
 		try {
-			long values[][] = {{1, 2}, {}};
+			long values[][] = { { 1, 2 }, {} };
 			sphinxClient.updateAttributes("test1", strings, values, true);
 			fail();
 		} catch (SphinxException e) {
@@ -336,113 +337,96 @@ public class SphinxClientTest extends TestCase {
 		}
 
 	}
-	
-	
+
 	public void testWrongHostAndPortParameters() {
-		
+
 		try {
 			sphinxClient.setServer(null, 10);
 			fail();
-		}catch (Exception e) {
+		} catch (Exception e) {
 			assertTrue(true);
 			assertEquals("host name must not be empty", e.getMessage());
 		}
-		
+
 		try {
 			sphinxClient.setServer("", 10);
 			fail();
-		}catch (Exception e) {
+		} catch (Exception e) {
 			assertTrue(true);
 			assertEquals("host name must not be empty", e.getMessage());
-			
+
 		}
-		
+
 		try {
 			sphinxClient.setServer("localhost", 0);
 			fail();
-		}catch (Exception e) {
+		} catch (Exception e) {
 			assertTrue(true);
 			assertEquals("port must be in 1..65535 range", e.getMessage());
-			
+
 		}
 		try {
 			sphinxClient.setServer("localhost", 65536);
 			fail();
-		}catch (Exception e) {
+		} catch (Exception e) {
 			assertTrue(true);
 			assertEquals("port must be in 1..65535 range", e.getMessage());
 		}
-		
+
 		try {
 			sphinxClient.setServer("localhost", 5536);
-		}catch (Exception e) {
+		} catch (Exception e) {
 			fail();
 		}
-		
+
 		/*
-		  TODO
-		try {
-			new SphinxClient(null, 10);
-			fail();
-		}catch (Exception e) {
-			assertTrue(true);
-			assertEquals("host name must not be empty", e.getMessage());
-		}
-		
-		try {
-			new SphinxClient("", 10);
-			fail();
-		}catch (Exception e) {
-			assertTrue(true);
-			assertEquals("host name must not be empty", e.getMessage());
-		}
-		
-		try {
-			new SphinxClient("localhost", 0);
-			fail();
-		}catch (Exception e) {
-			assertTrue(true);
-			assertEquals("port must be in 1..65535 range", e.getMessage());
-		}
-		try {
-			new SphinxClient("localhost", 65536);
-			fail();
-		}catch (Exception e) {
-			assertTrue(true);
-			assertEquals("port must be in 1..65535 range", e.getMessage());
-		}
-		*/
+		 * TODO try { new SphinxClient(null, 10); fail(); }catch (Exception e) {
+		 * assertTrue(true); assertEquals("host name must not be empty",
+		 * e.getMessage()); }
+		 * 
+		 * try { new SphinxClient("", 10); fail(); }catch (Exception e) {
+		 * assertTrue(true); assertEquals("host name must not be empty",
+		 * e.getMessage()); }
+		 * 
+		 * try { new SphinxClient("localhost", 0); fail(); }catch (Exception e) {
+		 * assertTrue(true); assertEquals("port must be in 1..65535 range",
+		 * e.getMessage()); } try { new SphinxClient("localhost", 65536);
+		 * fail(); }catch (Exception e) { assertTrue(true); assertEquals("port
+		 * must be in 1..65535 range", e.getMessage()); }
+		 */
 	}
-	
-	public void testConnectToWrongServer(){
+
+	public void testConnectToWrongServer() {
 		try {
 			sphinxClient.setServer("localhost", 26550);
 			sphinxClient.query("wifi", "test1");
 			fail();
 		} catch (SphinxException e) {
-			assertEquals("connection to localhost:26550 failed: java.net.ConnectException: Connection refused", e.getMessage());
+			assertEquals(
+					"connection to localhost:26550 failed: java.net.ConnectException: Connection refused",
+					e.getMessage());
 		}
 		assertEquals("", sphinxClient.getLastWarning());
 	}
-	
-	
-	public void testBuildKeywords() throws SphinxException{
-		Map[] buildKeywords = sphinxClient.buildKeywords("wifi*", "test1", true);
+
+	public void testBuildKeywords() throws SphinxException {
+		Map[] buildKeywords = sphinxClient
+				.buildKeywords("wifi*", "test1", true);
 		assertNotNull(buildKeywords);
 		assertEquals("wifi", buildKeywords[0].get("tokenized"));
 		assertEquals("wifi", buildKeywords[0].get("normalized"));
 		assertEquals(new Long(3), buildKeywords[0].get("docs"));
 		assertEquals(new Long(6), buildKeywords[0].get("hits"));
-		
+
 		buildKeywords = sphinxClient.buildKeywords("wifi*", "test1", false);
 		assertNotNull(buildKeywords);
 		assertEquals("wifi", buildKeywords[0].get("tokenized"));
 		assertEquals("wifi", buildKeywords[0].get("normalized"));
 		assertNull(buildKeywords[0].get("docs"));
 		assertNull(buildKeywords[0].get("hits"));
-		
+
 	}
-	
+
 	public void testSetRetries() {
 		try {
 			sphinxClient.setRetries(-1);
@@ -458,13 +442,12 @@ public class SphinxClientTest extends TestCase {
 		}
 		try {
 			sphinxClient.setRetries(1, 1);
-		}catch (SphinxException e) {
+		} catch (SphinxException e) {
 			fail();
 		}
 	}
-	
-	
-	public void testSetGroupBy(){
+
+	public void testSetGroupBy() {
 		try {
 			sphinxClient.setGroupBy("group_id", SphinxClient.SPH_ATTR_ORDINAL);
 		} catch (SphinxException e) {
@@ -474,7 +457,9 @@ public class SphinxClientTest extends TestCase {
 			sphinxClient.setGroupBy("group_id", -10002);
 			fail();
 		} catch (SphinxException e) {
-			assertEquals("unknown func value; use one of the available SPH_GROUPBY_xxx constants", e.getMessage());
+			assertEquals(
+					"unknown func value; use one of the available SPH_GROUPBY_xxx constants",
+					e.getMessage());
 		}
 
 	}
@@ -484,14 +469,14 @@ public class SphinxClientTest extends TestCase {
 		DataOutputStream ostream = new DataOutputStream(baos);
 		SphinxClient.writeNetUTF8(ostream, "test");
 		byte[] byteArray = baos.toByteArray();
-		byte[] expected = {0, 0, 0, 4, 116, 101, 115, 116};
+		byte[] expected = { 0, 0, 0, 4, 116, 101, 115, 116 };
 		assertEquals(expected, byteArray);
-		
+
 		baos = new ByteArrayOutputStream();
 		ostream = new DataOutputStream(baos);
 		SphinxClient.writeNetUTF8(ostream, null);
 		byteArray = baos.toByteArray();
-		expected = new byte[] {0, 0, 0, 0};
+		expected = new byte[] { 0, 0, 0, 0 };
 		assertEquals(expected, byteArray);
 
 	}
@@ -500,19 +485,22 @@ public class SphinxClientTest extends TestCase {
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		DataOutputStream dout = new DataOutputStream(baos);
-		
+
 		dout.writeInt(0);
 		dout.writeInt(232220);
 		dout.writeInt(-232220);
 		dout.writeInt(Integer.MAX_VALUE);
 		dout.writeInt(Integer.MIN_VALUE);
-		
-		DataInputStream istream = new DataInputStream(new ByteArrayInputStream(baos.toByteArray()));
+
+		DataInputStream istream = new DataInputStream(new ByteArrayInputStream(
+				baos.toByteArray()));
 		assertEquals(0, SphinxClient.readDword(istream));
 		assertEquals(232220, SphinxClient.readDword(istream));
-		assertEquals(SphinxClient.MAX_DWORD - 232220, SphinxClient.readDword(istream));
+		assertEquals(SphinxClient.MAX_DWORD - 232220, SphinxClient
+				.readDword(istream));
 		assertEquals(Integer.MAX_VALUE, SphinxClient.readDword(istream));
-		assertEquals(SphinxClient.MAX_DWORD + Integer.MIN_VALUE, SphinxClient.readDword(istream));
+		assertEquals(SphinxClient.MAX_DWORD + Integer.MIN_VALUE, SphinxClient
+				.readDword(istream));
 
 	}
 
@@ -523,7 +511,7 @@ public class SphinxClientTest extends TestCase {
 		} catch (SphinxException e) {
 			assertEquals("offset must not be negative", e.getMessage());
 		}
-		
+
 		try {
 			sphinxClient.setLimits(0, 0, -1);
 			fail();
@@ -568,96 +556,111 @@ public class SphinxClientTest extends TestCase {
 		}
 
 	}
-	
+
 	public void testHelloWithWrongVersion() throws IOException {
-				byte[] hello = new byte[]{0, 0, 0, 0};
-				final InputStream in = new ByteArrayInputStream(hello);
-				final ByteArrayOutputStream out = new ByteArrayOutputStream();
-				final Socket socket = new Socket () {
-				    public InputStream getInputStream() throws IOException {
-				    	return in;
-				    }
-				    public OutputStream getOutputStream() throws IOException {
-						return out;
-				    }	
-				};
-				sphinxClient = new SphinxClient(){
-					protected Socket getSocket() throws UnknownHostException, IOException {
-						return socket;
-					}
-				};
-				ByteArrayOutputStream data = new ByteArrayOutputStream();
-				byte[] bs = new byte[]{0,2,3,4,5,3,2,3,4,4,3,3};
-				data.write(bs);
-				try {
-					sphinxClient.executeCommand( SphinxClient.SEARCHD_COMMAND_UPDATE, SphinxClient.VER_COMMAND_UPDATE, data);
-					fail();
-				} catch (SphinxException e) {
-					assertEquals("expected searchd protocol version 1+, got version 0", e.getMessage());
-				}
-				assertTrue(socket.isClosed());
+		byte[] hello = new byte[] { 0, 0, 0, 0 };
+		final InputStream in = new ByteArrayInputStream(hello);
+		final ByteArrayOutputStream out = new ByteArrayOutputStream();
+		final Socket socket = new Socket() {
+			public InputStream getInputStream() throws IOException {
+				return in;
 			}
-	
-	public void testConnectFailure() throws IOException {
-		final Socket socket = new Socket () {
-		    public InputStream getInputStream() throws IOException {
-		    	throw new ConnectException("error happened");
-		    }
+
+			public OutputStream getOutputStream() throws IOException {
+				return out;
+			}
 		};
-		sphinxClient = new SphinxClient(){
-			protected Socket getSocket() throws UnknownHostException, IOException {
+		sphinxClient = new SphinxClient() {
+			protected Socket getSocket() throws UnknownHostException,
+					IOException {
 				return socket;
 			}
 		};
 		ByteArrayOutputStream data = new ByteArrayOutputStream();
-		byte[] bs = new byte[]{0,2,3,4,5,3,2,3,4,4,3,3};
+		byte[] bs = new byte[] { 0, 2, 3, 4, 5, 3, 2, 3, 4, 4, 3, 3 };
 		data.write(bs);
 		try {
-			sphinxClient.executeCommand( SphinxClient.SEARCHD_COMMAND_UPDATE, SphinxClient.VER_COMMAND_UPDATE, data);
+			sphinxClient.executeCommand(SphinxClient.SEARCHD_COMMAND_UPDATE,
+					SphinxClient.VER_COMMAND_UPDATE, data);
 			fail();
 		} catch (SphinxException e) {
-			assertEquals("connection to localhost:3312 failed: java.net.ConnectException: error happened", e.getMessage());
+			assertEquals("expected searchd protocol version 1+, got version 0",
+					e.getMessage());
+		}
+		assertTrue(socket.isClosed());
+	}
+
+	public void testConnectFailure() throws IOException {
+		final Socket socket = new Socket() {
+			public InputStream getInputStream() throws IOException {
+				throw new ConnectException("error happened");
+			}
+		};
+		sphinxClient = new SphinxClient() {
+			protected Socket getSocket() throws UnknownHostException,
+					IOException {
+				return socket;
+			}
+		};
+		ByteArrayOutputStream data = new ByteArrayOutputStream();
+		byte[] bs = new byte[] { 0, 2, 3, 4, 5, 3, 2, 3, 4, 4, 3, 3 };
+		data.write(bs);
+		try {
+			sphinxClient.executeCommand(SphinxClient.SEARCHD_COMMAND_UPDATE,
+					SphinxClient.VER_COMMAND_UPDATE, data);
+			fail();
+		} catch (SphinxException e) {
+			assertEquals(
+					"connection to localhost:3312 failed: java.net.ConnectException: error happened",
+					e.getMessage());
 		}
 		assertTrue(socket.isClosed());
 	}
 
 	public void testExecuteCommand() throws IOException, SphinxException {
-			byte[] hello = new byte[]{0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 3, 2, 5, 12};
-			final InputStream in = new ByteArrayInputStream(hello);
-			final ByteArrayOutputStream out = new ByteArrayOutputStream();
-			final Socket socket = new Socket () {
-			    public InputStream getInputStream() throws IOException {
-			    	return in;
-			    }
-			    public OutputStream getOutputStream() throws IOException {
-					return out;
-			    }	
-			};
-			sphinxClient = new SphinxClient(){
-				protected Socket getSocket() throws UnknownHostException, IOException {
-					return socket;
-				}
-			};
-			ByteArrayOutputStream data = new ByteArrayOutputStream();
-			byte[] bs = new byte[]{0,2,3,4,5,3,2,3,4,4,3,3};
-			data.write(bs);
-			
-			DataInputStream res = sphinxClient.executeCommand( SphinxClient.SEARCHD_COMMAND_UPDATE, SphinxClient.VER_COMMAND_UPDATE, data);
-			byte[] response = new byte[3];
-			res.readFully(response);
-			assertEquals(new byte[]{2,5,12}, response);
-			
-			byte[] expectedBytes = {0, 0, 0, 1, 0, 2, 01, 02, 0, 0, 0, 12, 0,2,3,4,5,3,2,3,4,4,3,3};
-			assertEquals(expectedBytes, out.toByteArray());
-			assertTrue(socket.isClosed());
-		}
+		byte[] hello = new byte[] { 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 3, 2, 5,
+				12 };
+		final InputStream in = new ByteArrayInputStream(hello);
+		final ByteArrayOutputStream out = new ByteArrayOutputStream();
+		final Socket socket = new Socket() {
+			public InputStream getInputStream() throws IOException {
+				return in;
+			}
+
+			public OutputStream getOutputStream() throws IOException {
+				return out;
+			}
+		};
+		sphinxClient = new SphinxClient() {
+			protected Socket getSocket() throws UnknownHostException,
+					IOException {
+				return socket;
+			}
+		};
+		ByteArrayOutputStream data = new ByteArrayOutputStream();
+		byte[] bs = new byte[] { 0, 2, 3, 4, 5, 3, 2, 3, 4, 4, 3, 3 };
+		data.write(bs);
+
+		DataInputStream res = sphinxClient.executeCommand(
+				SphinxClient.SEARCHD_COMMAND_UPDATE,
+				SphinxClient.VER_COMMAND_UPDATE, data);
+		byte[] response = new byte[3];
+		res.readFully(response);
+		assertEquals(new byte[] { 2, 5, 12 }, response);
+
+		byte[] expectedBytes = { 0, 0, 0, 1, 0, 2, 01, 02, 0, 0, 0, 12, 0, 2,
+				3, 4, 5, 3, 2, 3, 4, 4, 3, 3 };
+		assertEquals(expectedBytes, out.toByteArray());
+		assertTrue(socket.isClosed());
+	}
 
 	public void testGetSocket() {
 		Socket socket = null;
-		
+
 		try {
 			socket = sphinxClient.getSocket();
-			assertEquals(SphinxClient.SPH_CLIENT_TIMEOUT_MILLISEC, socket.getSoTimeout());
+			assertEquals(SphinxClient.SPH_CLIENT_TIMEOUT_MILLISEC, socket
+					.getSoTimeout());
 		} catch (Exception e) {
 			fail();
 		} finally {
@@ -671,11 +674,11 @@ public class SphinxClientTest extends TestCase {
 	}
 
 	public void testClose() {
-		Closeable c = new Closeable(){
+		Closeable c = new Closeable() {
 			public void close() throws IOException {
 				throw new IllegalArgumentException();
 			}
-			
+
 		};
 		try {
 			sphinxClient.close(c);
@@ -689,21 +692,22 @@ public class SphinxClientTest extends TestCase {
 			sphinxClient.runQueries();
 			fail();
 		} catch (SphinxException e) {
-			assertEquals("no queries defined, issue AddQuery() first", e.getMessage());
+			assertEquals("no queries defined, issue AddQuery() first", e
+					.getMessage());
 		}
 	}
 
 	public void testSetWeights() throws SphinxException {
-		int[] weights = {102, 22, 112, 22, 12, 2};
+		int[] weights = { 102, 22, 112, 22, 12, 2 };
 		sphinxClient.setWeights(weights);
 		assertEquals(weights, sphinxClient.getWeights());
-		weights = new int[] {10, 12, 2};
+		weights = new int[] { 10, 12, 2 };
 		sphinxClient.setWeights(weights);
 		assertEquals(weights, sphinxClient.getWeights());
 	}
 
 	public void testSetRankingMode() {
-		
+
 		int[] rankingModes = { SphinxClient.SPH_RANK_BM25,
 				SphinxClient.SPH_RANK_NONE, SphinxClient.SPH_RANK_PROXIMITY,
 				SphinxClient.SPH_RANK_PROXIMITY_BM25,
@@ -716,7 +720,7 @@ public class SphinxClientTest extends TestCase {
 				fail();
 			}
 		}
-		
+
 		try {
 			sphinxClient.setRankingMode(-2332);
 			fail();
@@ -726,17 +730,83 @@ public class SphinxClientTest extends TestCase {
 	}
 
 	public void testSetSelectList() {
-			try {
-				sphinxClient.setSelectList(null);
-				fail();
-			} catch (SphinxException e) {
-				assertEquals("select is null", e.getMessage());
-			}
-			
-			try {
-				sphinxClient.setSelectList("*");
-			} catch (SphinxException e) {
-				fail(e.getMessage());
-			}
+		try {
+			sphinxClient.setSelectList(null);
+			fail();
+		} catch (SphinxException e) {
+			assertEquals("select must be not empty", e.getMessage());
 		}
+
+		try {
+			sphinxClient.setSelectList("*");
+		} catch (SphinxException e) {
+			fail(e.getMessage());
+		}
+	}
+
+	public void testSetOverride() throws SphinxException {
+		HashSet overrides = sphinxClient.overrides;
+		assertTrue(overrides.isEmpty());
+		HashMap hashMap = new HashMap();
+		hashMap.put(new Long(1), new Integer(1));
+		int[] types = { SphinxClient.SPH_ATTR_TIMESTAMP,
+				SphinxClient.SPH_ATTR_BIGINT, SphinxClient.SPH_ATTR_BOOL,
+				SphinxClient.SPH_ATTR_FLOAT, SphinxClient.SPH_ATTR_INTEGER };
+		for (int i = 0; i < types.length; i++) {
+			sphinxClient.setOverride("n", types[i], hashMap);
+		}
+		assertFalse(overrides.isEmpty());
+		assertEquals(1, overrides.size());
+		SphinxOverride override = (SphinxOverride) overrides.iterator().next();
+		assertEquals("n", override.getAttrName());
+		assertEquals(SphinxClient.SPH_ATTR_INTEGER, override.getAttrType());
+		assertSame(hashMap, override.getValues());
+		sphinxClient.resetOverrides();
+		overrides = sphinxClient.overrides;
+		assertTrue(overrides.isEmpty());
+
+	}
+
+	public void testSetOverrideWrongName() {
+		HashMap hashMap = new HashMap();
+		hashMap.put(new Long(1), new Integer(1));
+		try {
+			sphinxClient.setOverride(null, SphinxClient.SPH_ATTR_INTEGER,
+					hashMap);
+			fail();
+		} catch (SphinxException e) {
+			assertEquals("attrName must not be empty", e.getMessage());
+		}
+
+		try {
+			sphinxClient
+					.setOverride("", SphinxClient.SPH_ATTR_INTEGER, hashMap);
+			fail();
+		} catch (SphinxException e) {
+			assertEquals("attrName must not be empty", e.getMessage());
+		}
+	}
+
+	public void testSetOverrideWrongType() {
+		HashMap hashMap = new HashMap();
+		hashMap.put(new Long(1), new Integer(1));
+		try {
+			sphinxClient.setOverride("name", -10, hashMap);
+			fail();
+		} catch (SphinxException e) {
+			assertEquals("unsupported attrType (must be one of INTEGER,"
+					+ " TIMESTAMP, BOOL, FLOAT, or BIGINT)", e.getMessage());
+		}
+	}
+
+	public void testSetOverrideWrongHashMap() {
+		HashMap hashMap = new HashMap();
+		hashMap.put(new Long(1), new Integer(1));
+		try {
+			sphinxClient.setOverride("name", SphinxClient.SPH_ATTR_INTEGER, null);
+			fail();
+		} catch (SphinxException e) {
+			assertEquals("values must be not empty", e.getMessage());
+		}
+	}
 }
