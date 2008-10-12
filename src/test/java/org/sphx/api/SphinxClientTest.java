@@ -803,10 +803,50 @@ public class SphinxClientTest extends TestCase {
 		HashMap hashMap = new HashMap();
 		hashMap.put(new Long(1), new Integer(1));
 		try {
-			sphinxClient.setOverride("name", SphinxClient.SPH_ATTR_INTEGER, null);
+			sphinxClient.setOverride("name", SphinxClient.SPH_ATTR_INTEGER,
+					null);
 			fail();
 		} catch (SphinxException e) {
 			assertEquals("values must be not empty", e.getMessage());
+		}
+	}
+
+	public void testOverride() throws Exception {
+		Map values = new HashMap();
+		values.put(new Long(2), new Integer(5));
+		values.put(new Long(1), new Integer(15));
+		sphinxClient.setOverride("group_id", SphinxClient.SPH_ATTR_INTEGER, values);
+		SphinxResult result = sphinxClient.query("wifi", "test1");
+		SphinxMatch[] matchs = result.matches;
+		assertEquals(2, matchs[0].getDocId());
+		assertEquals(2, matchs[0].getWeight());
+		assertEquals(new Long(1175658555), matchs[0].getAttrValues().get(0));
+		assertEquals(new Long(5), matchs[0].getAttrValues().get(1));
+
+		assertEquals(3, matchs[1].getDocId());
+		assertEquals(2, matchs[1].getWeight());
+		assertEquals(new Long(1175658647), matchs[1].getAttrValues().get(0));
+		assertEquals(new Long(1), matchs[1].getAttrValues().get(1));
+
+		assertEquals(1, matchs[2].getDocId());
+		assertEquals(1, matchs[2].getWeight());
+		assertEquals(new Long(1175658490), matchs[2].getAttrValues().get(0));
+		assertEquals(new Long(15), matchs[2].getAttrValues().get(1));
+	}
+	
+	public void testThrowExpectionForInvalidType() throws SphinxException {
+
+		Map values = new HashMap();
+		values.put(new Long(2), new Integer(5));
+		values.put(new Long(1), new Integer(15));
+		sphinxClient.setOverride("group_id", SphinxClient.SPH_ATTR_BIGINT,
+				values);
+		try {
+			sphinxClient.query("wifi", "test1");
+		} catch (SphinxException e) {
+			assertEquals("index test1: attribute override: "
+					+ "attribute 'group_id' type mismatch (index=1, query=6)",
+					e.getMessage());
 		}
 	}
 }

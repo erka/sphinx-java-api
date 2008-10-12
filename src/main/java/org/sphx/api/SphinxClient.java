@@ -32,6 +32,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 /** Sphinx client class. */
 public class SphinxClient {
@@ -1066,6 +1067,9 @@ public class SphinxClient {
 		SphinxResult res = results[0];
 		warning = res.warning;
 		error = res.error;
+		if (error != null) {
+			throw new SphinxException(error);
+		}
 		return res;
 	}
 
@@ -1168,10 +1172,35 @@ public class SphinxClient {
 
 			/* attribute overrides */
 			out.writeInt(overrides.size());
-
+			Iterator iterator = overrides.iterator();
+			while (iterator.hasNext()) {
+				SphinxOverride so = (SphinxOverride) iterator.next();
+				writeNetUTF8(out, so.getAttrName());
+				out.writeInt(so.getAttrType());
+				out.writeInt(so.getValues().size());
+				Iterator valuesIterator = so.getValues().entrySet().iterator();
+				while (valuesIterator.hasNext()) {
+					Map.Entry map = (Entry) valuesIterator.next();
+					long docId = ((Number) map.getKey()).longValue();
+					Number value = (Number) map.getValue();
+					out.writeLong(docId);
+					switch (so.getAttrType()) {
+					case SPH_ATTR_FLOAT:
+						out.writeFloat(value.floatValue());
+						break;
+					case SPH_ATTR_BIGINT:
+						out.writeLong(value.longValue());
+						break;
+					default:
+						out.writeInt(value.intValue());
+						break;
+					}					
+				}
+			}
+			
 			/* select list */
 			writeNetUTF8(out, selectList);
-
+			
 			/* done! */
 			out.flush();
 			int qIndex = reqs.size();
