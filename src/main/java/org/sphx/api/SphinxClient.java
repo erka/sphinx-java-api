@@ -147,7 +147,7 @@ public class SphinxClient {
 	private int			maxQueryTime;
 	private Map			fieldWeights;
 	private ArrayList	overrides;
-	private String 		select;
+	private String 		selectList;
 	
 	/** Sphinx client timeout. */
 	public static final int SPH_CLIENT_TIMEOUT_MILLISEC	= 30000;
@@ -206,7 +206,7 @@ public class SphinxClient {
 		fieldWeights = new LinkedHashMap();
 		rankingMode = SPH_RANK_PROXIMITY_BM25;
 		overrides = new ArrayList();
-		select = "*";
+		selectList = "*";
 	}
 
 	/** 
@@ -1028,7 +1028,7 @@ public class SphinxClient {
 			out.writeInt(overrides.size());
 			
 			/* select list */
-			writeNetUTF8(out, select);
+			writeNetUTF8(out, selectList);
 
 			
 			/* done! */
@@ -1480,5 +1480,16 @@ public class SphinxClient {
 		} catch (IOException e) {
 			throw new SphinxException("incomplete reply");
 		}
+	}
+	
+	/**
+	 * Set select-list (attributes or expressions), SQL-like syntax.
+	 * @param select the select-List
+	 * @throws SphinxException
+	 *             on invalid parameters
+	 */
+	public void setSelectList(final String select) throws SphinxException {
+		check(select != null, "select is null");
+		this.selectList = select;
 	}
 }

@@ -724,4 +724,19 @@ public class SphinxClientTest extends TestCase {
 			assertTrue(true);
 		}
 	}
+
+	public void testSetSelect() {
+		try {
+			sphinxClient.setSelectList(null);
+			fail();
+		} catch (SphinxException e) {
+			assertEquals("select is null", e.getMessage());
+		}
+		
+		try {
+			sphinxClient.setSelectList("*");
+		} catch (SphinxException e) {
+			fail(e.getMessage());
+		}
+	}
 }
