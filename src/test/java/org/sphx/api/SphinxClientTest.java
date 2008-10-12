@@ -326,6 +326,15 @@ public class SphinxClientTest extends TestCase {
 			assertEquals("update entry #0 has wrong length", e.getMessage());
 		}
 
+		try {
+			long values[][] = {{1, 2}, {}};
+			sphinxClient.updateAttributes("test1", strings, values, true);
+			fail();
+		} catch (SphinxException e) {
+			assertTrue(true);
+			assertEquals("update entry #1 has wrong length", e.getMessage());
+		}
+
 	}
 	
 	
@@ -693,4 +702,26 @@ public class SphinxClientTest extends TestCase {
 		assertEquals(weights, sphinxClient.getWeights());
 	}
 
+	public void testSetRankingMode() {
+		
+		int[] rankingModes = { SphinxClient.SPH_RANK_BM25,
+				SphinxClient.SPH_RANK_NONE, SphinxClient.SPH_RANK_PROXIMITY,
+				SphinxClient.SPH_RANK_PROXIMITY_BM25,
+				SphinxClient.SPH_RANK_WORDCOUNT };
+
+		for (int i = 0; i < rankingModes.length; i++) {
+			try {
+				sphinxClient.setRankingMode(rankingModes[i]);
+			} catch (SphinxException e) {
+				fail();
+			}
+		}
+		
+		try {
+			sphinxClient.setRankingMode(-2332);
+			fail();
+		} catch (SphinxException e) {
+			assertTrue(true);
+		}
+	}
 }
