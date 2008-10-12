@@ -1027,7 +1027,7 @@ public class SphinxClient {
 			out.writeInt(overrides.size());
 			
 			/* select list */
-			writeNetUTF8(out, comment);
+			writeNetUTF8(out, select);
 
 			
 			/* done! */
