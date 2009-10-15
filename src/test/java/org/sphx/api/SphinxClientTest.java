@@ -27,10 +27,11 @@ import junit.framework.TestCase;
 public class SphinxClientTest extends TestCase {
 
 	private SphinxClient sphinxClient;
+  private SphinxRunner runner = new SphinxRunner(); // static initializers start and stop sphinx
 
 	protected void setUp() throws Exception {
 		super.setUp();
-		sphinxClient = new SphinxClient();
+		sphinxClient = new SphinxClient( "localhost", 43470 );
 	}
 
 	static public void assertEquals(int[] expected, int[] actual) {
@@ -98,17 +99,17 @@ public class SphinxClientTest extends TestCase {
 
 		assertEquals(2, matchs[0].getDocId());
 		assertEquals(2, matchs[0].getWeight());
-		assertEquals(new Long(1175658555), matchs[0].getAttrValues().get(0));
+		assertEquals(new Long(1175683755), matchs[0].getAttrValues().get(0));
 		assertEquals(new Long(2), matchs[0].getAttrValues().get(1));
 
 		assertEquals(3, matchs[1].getDocId());
 		assertEquals(2, matchs[1].getWeight());
-		assertEquals(new Long(1175658647), matchs[1].getAttrValues().get(0));
+		assertEquals(new Long(1175683847), matchs[1].getAttrValues().get(0));
 		assertEquals(new Long(1), matchs[1].getAttrValues().get(1));
 
 		assertEquals(1, matchs[2].getDocId());
 		assertEquals(1, matchs[2].getWeight());
-		assertEquals(new Long(1175658490), matchs[2].getAttrValues().get(0));
+		assertEquals(new Long(1175683690), matchs[2].getAttrValues().get(0));
 		assertEquals(new Long(1), matchs[2].getAttrValues().get(1));
 
 		SphinxWordInfo sphinxWordInfo = result.words[0];
@@ -820,17 +821,17 @@ public class SphinxClientTest extends TestCase {
 		SphinxMatch[] matchs = result.matches;
 		assertEquals(2, matchs[0].getDocId());
 		assertEquals(2, matchs[0].getWeight());
-		assertEquals(new Long(1175658555), matchs[0].getAttrValues().get(0));
+		assertEquals(new Long(1175683755), matchs[0].getAttrValues().get(0));
 		assertEquals(new Long(5), matchs[0].getAttrValues().get(1));
 
 		assertEquals(3, matchs[1].getDocId());
 		assertEquals(2, matchs[1].getWeight());
-		assertEquals(new Long(1175658647), matchs[1].getAttrValues().get(0));
+		assertEquals(new Long(1175683847), matchs[1].getAttrValues().get(0));
 		assertEquals(new Long(1), matchs[1].getAttrValues().get(1));
 
 		assertEquals(1, matchs[2].getDocId());
 		assertEquals(1, matchs[2].getWeight());
-		assertEquals(new Long(1175658490), matchs[2].getAttrValues().get(0));
+		assertEquals(new Long(1175683690), matchs[2].getAttrValues().get(0));
 		assertEquals(new Long(15), matchs[2].getAttrValues().get(1));
 	}
 	
