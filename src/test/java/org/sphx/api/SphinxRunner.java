@@ -10,7 +10,10 @@ import org.slf4j.LoggerFactory;
 import org.sphx.util.JUnitProperties;
 
 /**
+ * Helper to automatically start Sphinx's searchd before the tests 
+ * run and stop searchd after the tests are finished.
  *
+ * @see {@link JUnitProperties}
  * @author Michael Guymon
  */
 public class SphinxRunner {
@@ -22,13 +25,18 @@ public class SphinxRunner {
       start();
 
       Thread hook = new Thread( new ShutdownSphinx() );
-      Runtime.getRuntime().addShutdownHook(hook);
+      Runtime.getRuntime().addShutdownHook(hook); // shuts down searchd when VM exits
 
     } catch (IOException ex) {
       logger.error("Failed to start sphinx", ex);
     }    
   }
 
+  /**
+   * Start Sphinx
+   *
+   * @throws IOException
+   */
   private static void start() throws IOException {
 
     String sphinxDataPath = "target/sphinx/data/log";
@@ -54,6 +62,9 @@ public class SphinxRunner {
   }
 
 
+  /**
+   * Shutdown Sphinx
+   */
   private static void shutdown() {
       String[] command = new String[]{ junitProperties.getSphinxSearcherd(), "-c", "src/test/resources/sphinx.conf", "--stop"};
       logger.debug("Stopping searchd: {}", StringUtils.join( command, " " ) );
@@ -65,6 +76,12 @@ public class SphinxRunner {
       }
   }
 
+  /**
+   * Execute a command line process
+   *
+   * @param command String[]
+   * @throws IOException
+   */
   private static void execute( String[] command ) throws IOException {
     Process process = null;
     process = Runtime.getRuntime().exec(command);
@@ -85,10 +102,14 @@ public class SphinxRunner {
 
   }
 
+  /**
+   * Executed {@link Runnable} when VM exists to stop Sphinx
+   */
   private static class ShutdownSphinx implements Runnable {
     private static Logger logger = LoggerFactory.getLogger(ShutdownSphinx.class);
     
-    public void run() {      
+    public void run() {
+      logger.debug( "Running exit hook" );
       shutdown();
     }
   }
