@@ -20,7 +20,12 @@ This version has full compatibility with jdk 1.4.
 == Requirements
 
 Tests need searchd service with "test1" index. Checkout <tt>src/test/resources/sphinx_test.sql</tt> for the database setup.
-The indexer and searchd daemon are automatically started for the tests, but indexer and searchd must be in your path. *Does not work for windows at this moment*
+The indexer and searchd daemon are automatically started for the tests, but indexer and searchd must be in your path. 
+If you don't have indexer or searchd daemons into your path, you should copy
+<tt>src/test/resources/junit-default.properties</tt> to <tt>src/test/resources/junit.properties</tt> and modify 
+<tt>sphinx.searchd</tt> and <tt>sphinx.indexer</tt> values depends on your environment.
+
+*Does not work for windows at this moment*
 
 == Building
 

@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.sphx.util.JUnitProperties;
 
 /**
  *
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 public class SphinxRunner {
 
   private static Logger logger = LoggerFactory.getLogger(SphinxRunner.class);
+  private static JUnitProperties junitProperties = new JUnitProperties();
   static {
     try {
       start();
@@ -41,19 +43,19 @@ public class SphinxRunner {
     shutdown();
 
     // indexer -c src/test/resources/sphinx.conf test1
-    String[] command = new String[]{"indexer", "-c", "src/test/resources/sphinx.conf", "test1", "test2"};
+    String[] command = new String[]{ junitProperties.getSphinxIndexer(), "-c", "src/test/resources/sphinx.conf", "test1", "test2"};
     logger.debug("Running indexer: {}", StringUtils.join( command, " " ) );
     execute( command );
     
     // searchd -c src/test/resources/sphinx.conf -p 4347
-    command = new String[]{"searchd", "-c", "src/test/resources/sphinx.conf" };
+    command = new String[]{ junitProperties.getSphinxSearcherd(), "-c", "src/test/resources/sphinx.conf" };
     logger.debug("Running searchd: {}", StringUtils.join( command, " " ) );
     execute( command );
   }
 
 
   private static void shutdown() {
-      String[] command = new String[]{"searchd", "-c", "src/test/resources/sphinx.conf", "--stop"};
+      String[] command = new String[]{ junitProperties.getSphinxSearcherd(), "-c", "src/test/resources/sphinx.conf", "--stop"};
       logger.debug("Stopping searchd: {}", StringUtils.join( command, " " ) );
       try {
         // searchd -c src/test/resources/sphinx.conf -p 4347 --stop

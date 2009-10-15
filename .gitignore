@@ -4,3 +4,4 @@ target
 .classpath
 .settings
 doc
+src/test/resources/junit.properties
