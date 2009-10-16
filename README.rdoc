@@ -53,7 +53,7 @@ Report could be found at <tt>target/site/project-reports.html</tt>.
 
 
 == Support
-
+* Michael Guymon <michael.guymon@gmail.com> http://blarg.slackworks.com/
 * Roman Dmytrenko <erka@kpumuk.info> http://erka.kpumuk.info
 * Andrew Aksyonoff http://www.sphinxsearch.com/contacts.html
 * Vladimir Fedorkov http://www.sphinxsearch.com/contacts.html
