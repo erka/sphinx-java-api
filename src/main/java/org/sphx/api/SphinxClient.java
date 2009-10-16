@@ -42,8 +42,8 @@ public class SphinxClient {
 	private static final int EXCEPTS_SINGLE_PASSAGE_FLAG = 4;
 	private static final int EXCEPTS_EXACT_PHASE_FLAG = 2;
 
-	private static final Integer DEFAULT_EXCEPTS_AROUND = new Integer(5);
-	private static final Integer DEFAULT_EXCEPTS_LIMIT = new Integer(256);
+	private static final Integer DEFAULT_EXCEPTS_AROUND =  Integer.valueOf(5);
+	private static final Integer DEFAULT_EXCEPTS_LIMIT = Integer.valueOf(256);
 	private static final float MILLSEC_IN_SEC = 1000.0f;
 	private static final int DEFAULT_LIMIT = 20;
 	private static final int DEFAULT_SEARCHD_PORT = 3312;
@@ -1313,14 +1313,14 @@ public class SphinxClient {
 
 						/* handle bigints */
 						if (type == SPH_ATTR_BIGINT) {
-							docInfo.addAttribute(attrNumber, new Long(in
+							docInfo.addAttribute(attrNumber, Long.valueOf(in
 									.readLong()));
 							continue;
 						}
 
 						/* handle floats */
 						if (type == SPH_ATTR_FLOAT) {
-							docInfo.addAttribute(attrNumber, new Float(in
+							docInfo.addAttribute(attrNumber, Float.valueOf(in
 									.readFloat()));
 							continue;
 						}
@@ -1334,7 +1334,7 @@ public class SphinxClient {
 							}
 							docInfo.addAttribute(attrNumber, vals);
 						} else {
-							docInfo.addAttribute(attrNumber, new Long(val));
+							docInfo.addAttribute(attrNumber, Long.valueOf(val));
 						}
 					}
 					res.matches[matchesNo] = docInfo;
@@ -1405,16 +1405,16 @@ public class SphinxClient {
 			opts.put("around", DEFAULT_EXCEPTS_AROUND);
 		}
 		if (!opts.containsKey("exact_phrase")) {
-			opts.put("exact_phrase", new Integer(0));
+			opts.put("exact_phrase", Integer.valueOf(0));
 		}
 		if (!opts.containsKey("single_passage")) {
-			opts.put("single_passage", new Integer(0));
+			opts.put("single_passage", Integer.valueOf(0));
 		}
 		if (!opts.containsKey("use_boundaries")) {
-			opts.put("use_boundaries", new Integer(0));
+			opts.put("use_boundaries", Integer.valueOf(0));
 		}
 		if (!opts.containsKey("weight_order")) {
-			opts.put("weight_order", new Integer(0));
+			opts.put("weight_order", Integer.valueOf(0));
 		}
 
 		/* build request */
