@@ -32,7 +32,6 @@ public class SphinxClientTest extends TestCase {
 	private SphinxRunner runner = new SphinxRunner(); // static initializers
 
 	// start and stop sphinx
-
 	protected void setUp() throws Exception {
 		super.setUp();
 		sphinxClient = new SphinxClient("localhost", 43470);

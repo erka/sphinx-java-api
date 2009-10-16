@@ -46,7 +46,7 @@ public class SphinxClient {
 	private static final Integer DEFAULT_EXCEPTS_LIMIT = Integer.valueOf(256);
 	private static final float MILLSEC_IN_SEC = 1000.0f;
 	private static final int DEFAULT_LIMIT = 20;
-	private static final int DEFAULT_SEARCHD_PORT = 3312;
+	protected static final int DEFAULT_SEARCHD_PORT = 3312;
 	public static final long MAX_DWORD = 4294967296L; /* 2 ^ 32 */
 
 	/* matching modes */
@@ -116,10 +116,10 @@ public class SphinxClient {
 	// TODO FIXME private static final int SPH_FILTER_FLOATRANGE = 2;
 
 	private String host;
-	private int port;
+	protected int port;
 	private int offset;
 	private int limit;
-	private int mode;
+	protected int mode;
 	private int[] weights;
 	private int sortMode;
 	private String sortby;
