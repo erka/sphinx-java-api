@@ -15,7 +15,8 @@ did not, you can find it at http://www.gnu.org
 
 == Compatibility
 
-This version has full compatibility with jdk 1.4.
+This version has full compatibility with jdk 6.
+If you need compatibility with 1.4 look to tag <tt>version-0.9.9-java-1.4</tt>
 
 == Requirements
 
@@ -53,7 +54,7 @@ Report could be found at <tt>target/site/project-reports.html</tt>.
 
 
 == Support
-* Michael Guymon <michael.guymon@gmail.com> http://blarg.slackworks.com/
+* Michael Guymon <michael.guymon@gmail.com> http://blarg.slackworks.com
 * Roman Dmytrenko <erka@kpumuk.info> http://erka.kpumuk.info
 * Andrew Aksyonoff http://www.sphinxsearch.com/contacts.html
 * Vladimir Fedorkov http://www.sphinxsearch.com/contacts.html
