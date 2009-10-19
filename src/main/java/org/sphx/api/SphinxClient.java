@@ -1073,6 +1073,17 @@ public class SphinxClient {
 		return res;
 	}
 
+  /**
+   * Add new query using {@link SphinxSearch} to current search request.
+   *
+   * @param sphinxSearch {@link SphinxSearch}
+   * @return int position query in queries collection.
+   * @throws SphinxException if error happened
+   */
+  public int addQuery(final SphinxSearch sphinxSearch) throws SphinxException {
+    return addQuery(sphinxSearch.buildQuery(), sphinxSearch.getIndex(), sphinxSearch.getComment());
+  }
+
 	/**
 	 * Add new query with current settings to current search request.
 	 * 
@@ -1293,7 +1304,7 @@ public class SphinxClient {
 				/* read match count */
 				int count = in.readInt();
 				int id64 = in.readInt();
-				res.matches = new SphinxMatch[count];
+        
 				for (int matchesNo = 0; matchesNo < count; matchesNo++) {
 					SphinxMatch docInfo;
 					boolean isDword = (id64 == 0);
@@ -1313,15 +1324,15 @@ public class SphinxClient {
 
 						/* handle bigints */
 						if (type == SPH_ATTR_BIGINT) {
-							docInfo.addAttribute(attrNumber, Long.valueOf(in
-									.readLong()));
+							docInfo.setAttribute(
+                res.attrNames[attrNumber], Long.valueOf(in.readLong()));
 							continue;
 						}
 
 						/* handle floats */
 						if (type == SPH_ATTR_FLOAT) {
-							docInfo.addAttribute(attrNumber, Float.valueOf(in
-									.readFloat()));
+							docInfo.setAttribute(
+                res.attrNames[attrNumber], Float.valueOf(in.readFloat()));
 							continue;
 						}
 
@@ -1332,12 +1343,13 @@ public class SphinxClient {
 							for (int k = 0; k < val; k++) {
 								vals[k] = readDword(in);
 							}
-							docInfo.addAttribute(attrNumber, vals);
+							docInfo.setAttribute(res.attrNames[attrNumber], vals);
 						} else {
-							docInfo.addAttribute(attrNumber, Long.valueOf(val));
+							docInfo.setAttribute(
+                res.attrNames[attrNumber], Long.valueOf(val));
 						}
 					}
-					res.matches[matchesNo] = docInfo;
+					res.addMatch(docInfo);
 				}
 
 				res.total = in.readInt();

@@ -1,5 +1,8 @@
 package org.sphx.api;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Search result set.
  * Includes retrieved matches array, status code and error/warning messages,
@@ -17,7 +20,7 @@ public class SphinxResult {
 	public int[] attrTypes;
 
 	/** Retrieved matches. */
-	public SphinxMatch[] matches;
+	private List<SphinxMatch> matches;
 
 	/** Total matches in this result set. */
 	public int total;
@@ -43,7 +46,7 @@ public class SphinxResult {
 	/** Trivial constructor, initializes an empty result set. */
 	public SphinxResult() {
 		this.attrNames = new String[0];
-		this.matches = new SphinxMatch[0];
+		this.matches = new ArrayList<SphinxMatch>();
 		this.words = new SphinxWordInfo[0];
 		this.fields = new String[0];
 		this.attrTypes = new int[0];
@@ -62,4 +65,31 @@ public class SphinxResult {
 	final void setStatus(final int curStatus) {
 		this.status = curStatus;
 	}
+
+  /**
+   * Get List of {@link SphinxMatch}es for this result.
+   *
+   * @return List of {@link SphinxMatches}
+   */
+  public List<SphinxMatch> getMatches() {
+    return matches;
+  }
+
+  /**
+   * Set List of {@link SphinxMatch}es for this result.
+   *
+   * @param searchMatches {@link SphinxMatches}[]
+   */
+  public void setMatches(final List<SphinxMatch> searchMatches) {
+    this.matches = searchMatches;
+  }
+
+  /**
+   * Add a {@link SphinxMatch}.
+   *
+   * @param match {@link SphinxMatch}
+   */
+  public void addMatch(final SphinxMatch match) {
+    this.matches.add(match);
+  }
 }

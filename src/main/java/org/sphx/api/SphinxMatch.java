@@ -1,6 +1,7 @@
 package org.sphx.api;
 
-import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * Matched document information, as in search result.
@@ -12,8 +13,8 @@ public class SphinxMatch {
 	/** Matched document weight. */
 	private int weight;
 
-	/** Matched document attribute values. */
-	private ArrayList attrValues;
+	/** Matched document attributes. */
+	private Map attributes;
 
 	/** Trivial constructor.
 	 * @param curDocId id of document.
@@ -22,7 +23,7 @@ public class SphinxMatch {
 	public SphinxMatch(final long curDocId, final int curWeight) {
 		this.docId = curDocId;
 		this.weight = curWeight;
-		this.attrValues = new ArrayList();
+		this.attributes = new LinkedHashMap();
 	}
 
 	/**
@@ -41,20 +42,33 @@ public class SphinxMatch {
 		return weight;
 	}
 
-	/**
-	 * Matched document attribute values.
-	 * @return the attrValues
-	 */
-	public final ArrayList getAttrValues() {
-		return attrValues;
-	}
+  /**
+   * Set attribute.
+   *
+   * @param field String
+   * @param value Object
+   */
+	public void setAttribute(final String field, final Object value) {
+    this.attributes.put(field, value);
+  }
 
-	/**
-	 * Add attribute to collection.
-	 * @param idx attribute index.
-	 * @param obj attribute value.
-	 */
-	final void addAttribute(final int idx, final Object obj) {
-		attrValues.add(idx, obj);
-	}
+  /**
+   * Get attribute.
+   *
+   * @param field String
+   * @return Object
+   */
+  public Object getAttribute(final String field) {
+    return this.attributes.get(field);
+  }
+
+  /**
+   * Get attribute.
+   *
+   * @param fieldPos Integer
+   * @return Object
+   */
+  public Object getAttribute(final Integer fieldPos) {
+    return this.attributes.get(this.attributes.keySet().toArray()[fieldPos]);
+  }
 }

@@ -15,6 +15,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 import junit.framework.TestCase;
@@ -90,28 +91,28 @@ public class SphinxClientTest extends TestCase {
 		SphinxResult result = sphinxClient.query("wifi", "test1");
 
 		assertEquals(3, result.totalFound);
-		assertEquals(3, result.matches.length);
+		assertEquals(3, result.getMatches().size());
 		assertTrue(result.time > -1.0);
 		String[] attrNames = result.attrNames;
 		assertEquals("created_at", attrNames[0]);
 		assertEquals("group_id", attrNames[1]);
 		assertEquals(3, result.total);
-		SphinxMatch[] matchs = result.matches;
+		List<SphinxMatch> matchs = result.getMatches();
 
-		assertEquals(2, matchs[0].getDocId());
-		assertEquals(2, matchs[0].getWeight());
-		assertEquals(getTimeInSeconds("2007-04-04 06:49:15"), matchs[0].getAttrValues().get(0));
-		assertEquals(new Long(2), matchs[0].getAttrValues().get(1));
+		assertEquals(2, matchs.get(0).getDocId());
+		assertEquals(2, matchs.get(0).getWeight());
+		assertEquals(getTimeInSeconds("2007-04-04 06:49:15"), matchs.get(0).getAttribute("created_at"));
+		assertEquals(new Long(2), matchs.get(0).getAttribute("group_id"));
 
-		assertEquals(3, matchs[1].getDocId());
-		assertEquals(2, matchs[1].getWeight());
-		assertEquals(getTimeInSeconds("2007-04-04 06:50:47"), matchs[1].getAttrValues().get(0));
-		assertEquals(new Long(1), matchs[1].getAttrValues().get(1));
+		assertEquals(3, matchs.get(1).getDocId());
+		assertEquals(2, matchs.get(1).getWeight());
+		assertEquals(getTimeInSeconds("2007-04-04 06:50:47"), matchs.get(1).getAttribute("created_at"));
+		assertEquals(new Long(1), matchs.get(1).getAttribute("group_id"));
 
-		assertEquals(1, matchs[2].getDocId());
-		assertEquals(1, matchs[2].getWeight());
-		assertEquals(getTimeInSeconds("2007-04-04 06:48:10"), matchs[2].getAttrValues().get(0));
-		assertEquals(new Long(1), matchs[2].getAttrValues().get(1));
+		assertEquals(1, matchs.get(2).getDocId());
+		assertEquals(1, matchs.get(2).getWeight());
+		assertEquals(getTimeInSeconds("2007-04-04 06:48:10"), matchs.get(2).getAttribute("created_at"));
+		assertEquals(new Long(1), matchs.get(2).getAttribute("group_id"));
 
 		SphinxWordInfo sphinxWordInfo = result.words[0];
 		assertEquals("wifi", sphinxWordInfo.getWord());
@@ -142,14 +143,14 @@ public class SphinxClientTest extends TestCase {
 		SphinxResult[] results = sphinxClient.runQueries();
 
 		assertEquals(3, results[0].totalFound);
-		assertEquals(3, results[0].matches.length);
+		assertEquals(3, results[0].getMatches().size());
 		SphinxWordInfo sphinxWordInfo = results[0].words[0];
 		assertEquals("wifi", sphinxWordInfo.getWord());
 		assertEquals(6, sphinxWordInfo.getHits());
 		assertEquals(3, sphinxWordInfo.getDocs());
 
 		assertEquals(0, results[1].totalFound);
-		assertEquals(0, results[1].matches.length);
+		assertEquals(0, results[1].getMatches().size());
 		sphinxWordInfo = results[1].words[0];
 		assertEquals("thisstringyouwillneverfound", sphinxWordInfo.getWord());
 		assertEquals(0, sphinxWordInfo.getHits());
@@ -180,18 +181,18 @@ public class SphinxClientTest extends TestCase {
 		assertEquals(1, updated);
 
 		SphinxResult result = sphinxClient.query("wifi", "test1");
-		SphinxMatch[] matchs = result.matches;
-		assertEquals(2, matchs[0].getDocId());
-		assertEquals(new Long(1), matchs[0].getAttrValues().get(1));
+		List<SphinxMatch> matchs = result.getMatches();
+		assertEquals(2, matchs.get(0).getDocId());
+		assertEquals(new Long(1), matchs.get(0).getAttribute("group_id"));
 
 		values[0][1] = 2;
 		updated = sphinxClient.updateAttributes("test1", attrs, values);
 		assertEquals(1, updated);
 
 		result = sphinxClient.query("wifi", "test1");
-		matchs = result.matches;
-		assertEquals(2, matchs[0].getDocId());
-		assertEquals(new Long(2), matchs[0].getAttrValues().get(1));
+		matchs = result.getMatches();
+		assertEquals(2, matchs.get(0).getDocId());
+		assertEquals(new Long(2), matchs.get(0).getAttribute("group_id"));
 	}
 
 	public void testMVAUpdateAttributes() throws SphinxException {
@@ -205,9 +206,9 @@ public class SphinxClientTest extends TestCase {
 		assertEquals(1, updated);
 
 		SphinxResult result = sphinxClient.query("wifi", "test1");
-		SphinxMatch[] matchs = result.matches;
-		assertEquals(2, matchs[0].getDocId());
-		long[] newMva = (long[]) matchs[0].getAttrValues().get(3);
+		List<SphinxMatch> matchs = result.getMatches();
+		assertEquals(2, matchs.get(0).getDocId());
+		long[] newMva = (long[]) matchs.get(0).getAttribute(3);
 		assertEquals(mvaForUpdate, newMva);
 
 		values[0] = new long[] { 2 };
@@ -215,9 +216,9 @@ public class SphinxClientTest extends TestCase {
 		assertEquals(1, updated);
 
 		result = sphinxClient.query("wifi", "test1");
-		matchs = result.matches;
-		assertEquals(2, matchs[0].getDocId());
-		newMva = (long[]) matchs[0].getAttrValues().get(3);
+		matchs = result.getMatches();
+		assertEquals(2, matchs.get(0).getDocId());
+		newMva = (long[]) matchs.get(0).getAttribute(3);
 		assertEquals(new long[0], newMva);
 
 		values[0] = new long[] { 2, 5, 6, 7, 8 };
@@ -225,9 +226,9 @@ public class SphinxClientTest extends TestCase {
 		assertEquals(1, updated);
 
 		result = sphinxClient.query("wifi", "test1");
-		matchs = result.matches;
-		assertEquals(2, matchs[0].getDocId());
-		newMva = (long[]) matchs[0].getAttrValues().get(3);
+		matchs = result.getMatches();
+		assertEquals(2, matchs.get(0).getDocId());
+		newMva = (long[]) matchs.get(0).getAttribute(3);
 		assertEquals(mvaOriginal, newMva);
 
 	}
@@ -793,21 +794,21 @@ public class SphinxClientTest extends TestCase {
 		values.put(new Long(1), new Integer(15));
 		sphinxClient.setOverride("group_id", SphinxClient.SPH_ATTR_INTEGER, values);
 		SphinxResult result = sphinxClient.query("wifi", "test1");
-		SphinxMatch[] matchs = result.matches;
-		assertEquals(2, matchs[0].getDocId());
-		assertEquals(2, matchs[0].getWeight());
-		assertEquals(getTimeInSeconds("2007-04-04 06:49:15"), matchs[0].getAttrValues().get(0));
-		assertEquals(new Long(5), matchs[0].getAttrValues().get(1));
+		List<SphinxMatch> matchs = result.getMatches();
+		assertEquals(2, matchs.get(0).getDocId());
+		assertEquals(2, matchs.get(0).getWeight());
+		assertEquals(getTimeInSeconds("2007-04-04 06:49:15"), matchs.get(0).getAttribute("created_at"));
+		assertEquals(new Long(5), matchs.get(0).getAttribute("group_id"));
 
-		assertEquals(3, matchs[1].getDocId());
-		assertEquals(2, matchs[1].getWeight());
-		assertEquals(getTimeInSeconds("2007-04-04 06:50:47"), matchs[1].getAttrValues().get(0));
-		assertEquals(new Long(1), matchs[1].getAttrValues().get(1));
+		assertEquals(3, matchs.get(1).getDocId());
+		assertEquals(2, matchs.get(1).getWeight());
+		assertEquals(getTimeInSeconds("2007-04-04 06:50:47"), matchs.get(1).getAttribute("created_at"));
+		assertEquals(new Long(1), matchs.get(1).getAttribute("group_id"));
 
-		assertEquals(1, matchs[2].getDocId());
-		assertEquals(1, matchs[2].getWeight());
-		assertEquals(getTimeInSeconds("2007-04-04 06:48:10"), matchs[2].getAttrValues().get(0));
-		assertEquals(new Long(15), matchs[2].getAttrValues().get(1));
+		assertEquals(1, matchs.get(2).getDocId());
+		assertEquals(1, matchs.get(2).getWeight());
+		assertEquals(getTimeInSeconds("2007-04-04 06:48:10"), matchs.get(2).getAttribute("created_at"));
+		assertEquals(new Long(15), matchs.get(2).getAttribute("group_id"));
 	}
 
 	public void testThrowExpectionForInvalidType() throws SphinxException {
