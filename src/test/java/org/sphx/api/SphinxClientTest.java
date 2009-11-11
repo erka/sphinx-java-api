@@ -835,4 +835,10 @@ public class SphinxClientTest extends TestCase {
 		}
 		return Long.valueOf(result);
 	}
+
+	/*
+	public void testGetStatus() throws SphinxException, IOException {
+		sphinxClient.getStatus();
+	}*/
+	
 }
