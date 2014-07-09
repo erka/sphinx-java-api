@@ -653,7 +653,7 @@ public class SphinxClient {
 
 		check(modeValue == SPH_SORT_RELEVANCE || modeValue == SPH_SORT_ATTR_DESC
 				|| modeValue == SPH_SORT_ATTR_ASC || modeValue == SPH_SORT_TIME_SEGMENTS
-				|| modeValue == SPH_SORT_EXTENDED,
+				|| modeValue == SPH_SORT_EXTENDED || modeValue == SPH_SORT_EXPR,
 				"unknown mode value; use one of the available SPH_SORT_xxx constants");
 		check(modeValue == SPH_SORT_RELEVANCE || (isNotEmpty(sortbyValue)),
 				"sortby string must not be empty in selected mode");
